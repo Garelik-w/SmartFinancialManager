@@ -6,6 +6,7 @@
 # email:515337036@qq.com
 # =====================
 
+import os
 from datetime import datetime
 from flask import Flask, render_template
 # flask 导入上下文对象和必备函数
@@ -26,6 +27,9 @@ pymysql.install_as_MySQLdb()
 from flask_script import Manager
 # flask扩展 Migrate数据库迁移工具
 from flask_migrate import Migrate, MigrateCommand
+# flak扩展 Mail电子邮件
+from flask_mail import Mail, Message
+from threading import Thread
 
 app = Flask(__name__)  # flask初始化
 # 设置秘钥预防CSRF
@@ -33,6 +37,17 @@ app.config['SECRET_KEY'] = 'this key was created by GarryLin-w'
 # 配置数据库路径
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:123456@localhost:3306/flask-db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# 配置邮箱信息
+app.config['MAIL_SERVER'] = 'smtp.qq.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = '515337036@qq.com'
+app.config['MAIL_PASSWORD'] = 'xfiuzbwzliicbjcf'
+# 邮件批处理设置
+app.config['FLASK_MAIL_SUBJECT_PREFIX'] = '[SmartFinancialManager]'
+app.config['FLASK_MAIL_SENDER'] = 'SmartFinancialManager Admin <515337036@qq.com>'
+# app.config['FLASK_ADMIN'] = os.environ.get('FLASK_ADMIN')  # 从环境变量中获取FLASK_ADMIN信息用作邮件接收人
+app.config['FLASK_ADMIN'] = 'zhuiyiyydyy@163.com'
 
 # 初始化
 bootstrap = Bootstrap(app)  # flask-bootstrap初始化
@@ -40,6 +55,7 @@ moment = Moment(app)  # flask-moment初始化
 db = SQLAlchemy(app)  # flask-SQLAlchemy初始化
 manager = Manager(app)  # flask-script初始化
 migrate = Migrate(app, db)  # flask-Migrate初始化
+mail = Mail(app)  # flask-Mail初始化
 
 # 数据库模型(表）
 class Role(db.Model):
@@ -71,6 +87,9 @@ def home():
             db.session.add(user)
             db.session.commit()
             session['known'] = False
+            if app.config['FLASK_ADMIN']:
+                send_email(app.config['FLASK_ADMIN'], 'New User',
+                           'mail/new_user', user=user)
         else:
             session['known'] = True
         session['name'] = form.name.data
@@ -79,6 +98,23 @@ def home():
     return render_template('home.html',
                            form=form, name=session.get('name'), known=session.get('known', False),
                            current_time=datetime.utcnow())
+
+
+# 功能函数-邮件发送
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_email(to, subject, template, **kwargs):
+    msg = Message(app.config['FLASK_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
+                  sender=app.config['FLASK_MAIL_SENDER'], recipients=[to])
+    msg.body = render_template(template + '.txt', **kwargs)
+    msg.html = render_template(template + '.html', **kwargs)
+    thr = Thread(target=send_async_email, args=[app, msg])
+    thr.start()
+    return thr
+
 
 # 功能页面
 @app.route('/user/<name>')
@@ -119,6 +155,6 @@ def make_shell_context():
     return dict(db=db, User=User, Role=Role)
 
 if __name__ == '__main__':
-#     app.run()
-    manager.add_command('db', MigrateCommand)
-    manager.run()
+    app.run()
+    # manager.add_command('db', MigrateCommand)
+    # manager.run()
