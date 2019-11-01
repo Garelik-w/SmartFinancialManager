@@ -5,3 +5,6 @@ Pipfile
 
 # Packages
 __pycache__
+
+# Private
+private.py
