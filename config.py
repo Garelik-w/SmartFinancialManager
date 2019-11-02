@@ -42,6 +42,7 @@ class ProductionConfig(Config):
         'mysql://'
 
 
+# 在程序工厂函数根据需要导入对应的配置
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
