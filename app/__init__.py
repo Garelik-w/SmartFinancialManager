@@ -10,6 +10,8 @@ from flask_mail import Mail
 from config import config
 # flask扩展 SQLAlchemy-数据库ORM框架
 from flask_sqlalchemy import SQLAlchemy
+# flask扩展 Login用户认证状态管理
+from flask_login import LoginManager
 # 导入mysqlDB用以在SQLAlchemy框架下配置MySQL
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -20,6 +22,10 @@ mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
 
+# 用户认证状态管理
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.session_protection = 'strong'
 
 # 程序工厂函数（flask实例并初始化各模块）
 def create_app(config_name):
@@ -33,10 +39,15 @@ def create_app(config_name):
     mail.init_app(app)
     moment.init_app(app)
     db.init_app(app)
+    login_manager.init_app(app)
 
     # 从main包导入蓝本实例，并注册启动蓝本路由
-    from .web import main as main_blueprint
+    from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+
+    # 导入启动auth蓝本路由
+    from .auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')  # 设置增加蓝本路由的前缀
 
     return app
 
