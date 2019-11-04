@@ -8,8 +8,13 @@ from . import main  # 导入蓝本对象
 from .forms import NameForm  # 导入web表单模型
 
 # Home页
-@main.route('/', methods=['GET', 'POST'])
+@main.route('/')
 def home():
+    return render_template('home.html')
+
+# Index索引页
+@main.route('/index', methods=['GET', 'POST'])
+def index():
     form = NameForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.name.data).first()
@@ -24,8 +29,8 @@ def home():
         else:
             session['known'] = True
         session['name'] = form.name.data
-        return redirect(url_for('main.home'))
-    return render_template('home.html',
+        return redirect(url_for('main.index'))
+    return render_template('index.html',
                            form=form, name=session.get('name'),
                            known=session.get('known', False),
                            current_time=datetime.utcnow())
