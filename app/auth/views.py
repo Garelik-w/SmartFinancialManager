@@ -12,9 +12,11 @@ from . import auth
 from .. import db
 from ..dbmodels import User
 from ..email import send_email
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm, PasswordResetRequestForm, PasswordResetForm,\
+    ChangeEmailForm
 
 
+# 用户注册-未认证用户拦截
 # auth蓝本请求前检查
 @auth.before_app_request
 def before_request():
@@ -28,7 +30,7 @@ def before_request():
         return redirect(url_for('auth.unconfirmed'))
 
 
-# 用户未认证页面
+# 用户注册-用户未认证页面
 @auth.route('/unconfirmed')
 def unconfirmed():
     if current_user.is_anonymous or current_user.confirmed:
@@ -36,7 +38,7 @@ def unconfirmed():
     return render_template('auth/unconfirmed.html')
 
 
-# 未认证用户重新发送邮件确认
+# 用户注册-未认证用户重新发送邮件确认
 @auth.route('/confirm')
 @login_required
 def resend_confirmation():
@@ -47,7 +49,7 @@ def resend_confirmation():
     return redirect(url_for('main.home'))
 
 
-# 登录页面
+# 用户管理-登录页面
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -64,7 +66,7 @@ def login():
     # GET
     return render_template('auth/login.html', form=form)
 
-# 登出页面
+# 用户管理-登出页面
 @auth.route('/logout')
 @login_required
 def logout():
@@ -73,7 +75,7 @@ def logout():
     return redirect(url_for('main.home'))
 
 
-# 注册页面
+# 用户注册-注册页面
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -94,7 +96,7 @@ def register():
     return render_template('auth/register.html', form=form)
 
 
-# 确认密令URL
+# 用户注册-确认令牌URL
 @auth.route('/confirm/<token>')
 @login_required
 def confirm(token):
@@ -106,4 +108,96 @@ def confirm(token):
         flash('You have confirmed your account. Thanks!')
     else:
         flash('The confirmation link is invalid or has expired.')
+    return redirect(url_for('main.home'))
+
+
+# 用户管理-修改密码页面
+@auth.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        # POST
+        if current_user.verify_password(form.old_password.data):
+            current_user.password = form.password.data
+            db.session.add(current_user)
+            db.session.commit()
+            flash('Your password has been updated.')
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid password.')
+    # GET
+    return render_template("auth/change_password.html", form=form)
+
+
+# 忘记密码-请求重设页面
+@auth.route('/reset', methods=['GET', 'POST'])
+def password_reset_request():
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.home'))
+    form = PasswordResetRequestForm()
+    if form.validate_on_submit():
+        # POST
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        if user:
+            # 如果存在邮箱
+            token = user.generate_reset_token()
+            send_email(user.email, 'Reset Your Password',
+                       'auth/email/reset_password',
+                       user=user, token=token)
+        flash('An email with instructions to reset your password has been sent to you.')
+        return redirect(url_for('auth.login'))
+    # GET
+    return render_template('auth/reset_password.html', form=form)
+
+
+# 忘记密码-确认令牌URL
+@auth.route('/reset/<token>', methods=['GET', 'POST'])
+def password_reset(token):
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.home'))
+    form = PasswordResetForm()
+    if form.validate_on_submit():
+        # 重置密码
+        if User.reset_password(token, form.password.data):
+            db.session.commit()
+            flash('Your password has been updated.')
+            return redirect(url_for('auth.login'))
+        else:
+            return redirect(url_for('main.home'))
+    return render_template('auth/reset_password.html', form=form)
+
+
+# 用户管理-修改邮箱页面
+@auth.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email_request():
+    form = ChangeEmailForm()
+    if form.validate_on_submit():
+        # POST
+        if current_user.verify_password(form.password.data):
+            new_email = form.email.data.lower()
+            token = current_user.generate_email_change_token(new_email)
+            send_email(new_email, 'Confirm your email address',
+                       'auth/email/change_email',
+                       user=current_user, token=token)
+            flash('An email with instructions to confirm your new email '
+                  'address has been sent to you.')
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid email or password.')
+    # GET
+    return render_template("auth/change_email.html", form=form)
+
+
+# 邮箱修改-确认令牌URL
+@auth.route('/change_email/<token>')
+@login_required
+def change_email(token):
+    # 修改邮箱
+    if current_user.change_email(token):
+        db.session.commit()
+        flash('Your email address has been updated.')
+    else:
+        flash('Invalid request.')
     return redirect(url_for('main.home'))

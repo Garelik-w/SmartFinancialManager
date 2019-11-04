@@ -34,16 +34,16 @@ class User(UserMixin, db.Model):
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    # 比较密码
+    # 用户管理-验证密码
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # 创建确认令牌，过期时间为60min
+    # 用户注册-创建确认令牌，过期时间为60min
     def generate_confirmation_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id}).decode('utf-8')
+        return s.dumps({'confirm': self.id}).decode('utf-8')  # 加密信息confirm
 
-    # 检验令牌，并和已登录用户匹配
+    # 用户注册-检验令牌，并和已登录用户匹配
     def confirm(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -54,6 +54,51 @@ class User(UserMixin, db.Model):
             return False
         self.confirmed = True
         db.session.add(self)  # 只添加修改到会话，需要在confirm视图函数确认提交
+        return True
+
+    # 忘记密码-生成重置密码确认令牌（用于忘记密码确认）
+    def generate_reset_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'reset': self.id}).decode('utf-8')  # 加密信息reset
+
+    # 忘记密码-重置密码（需要有密令）
+    # 静态方法，不可访问类属性和方法，可被类和实例调用
+    @staticmethod
+    def reset_password(token, new_password):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        user = User.query.get(data.get('reset'))
+        if user is None:
+            return False
+        user.password = new_password
+        db.session.add(user)
+        return True
+
+    # 修改邮箱-创建确认令牌
+    def generate_email_change_token(self, new_email, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps(
+            {'change_email': self.id, 'new_email': new_email}).decode('utf-8')
+
+    # 修改邮箱-实现邮箱修改
+    def change_email(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        if data.get('change_email') != self.id:
+            return False
+        new_email = data.get('new_email')
+        if new_email is None:
+            return False
+        if self.query.filter_by(email=new_email).first() is not None:
+            return False
+        self.email = new_email
+        db.session.add(self)
         return True
 
     def __repr__(self):
