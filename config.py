@@ -16,6 +16,7 @@ class Config:
     FLASK_ADMIN = 'zhuiyiyydyy@163.com'  # 管理员地址
     # 配置数据库信息
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.getcwd() + '/app/static/avatar/'
 
     @staticmethod
     def init_app(app):

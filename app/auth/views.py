@@ -16,18 +16,19 @@ from .forms import LoginForm, RegistrationForm, ChangePasswordForm, PasswordRese
     ChangeEmailForm
 
 
-# 用户注册-未认证用户拦截
 # auth蓝本请求前检查
 @auth.before_app_request
 def before_request():
-    # 检查已登录且未认证用户，跳转到未认证提示界面
-    # 符合条件则拦截：用户已登录 && 用户账户未确认 && 请求端点不在认证蓝本中
-    if current_user.is_authenticated \
-            and not current_user.confirmed \
-            and request.endpoint \
-            and request.blueprint != 'auth' \
-            and request.endpoint != 'static':
-        return redirect(url_for('auth.unconfirmed'))
+    # 用户注册-检查已登录且未认证用户，跳转到未认证提示界面
+    # 用户注册-符合条件则拦截：用户已登录 && 用户账户未确认 && 请求端点不在认证蓝本中
+    # 用户资料-最新访问时间更新
+    if current_user.is_authenticated:
+        current_user.ping()
+        if not current_user.confirmed \
+                and request.endpoint \
+                and request.blueprint != 'auth' \
+                and request.endpoint != 'static':
+            return redirect(url_for('auth.unconfirmed'))
 
 
 # 用户注册-用户未认证页面

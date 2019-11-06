@@ -1,21 +1,80 @@
 from werkzeug.security import generate_password_hash, check_password_hash  # 导入加密函数和验证函数
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app
+from flask import current_app, request
+from datetime import datetime
 from . import db, login_manager
 
 
-# 数据库模型(表）
+# 权限管理（位操作）
+class Permission:
+    FOLLOW = 1
+    COMMENT = 2
+    WRITE = 4
+    MODERATE = 8
+    ADMIN = 16
+
+
+# 数据库角色模型(表）
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    default = db.Column(db.Boolean, default=False, index=True)
+    permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        super(Role, self).__init__(**kwargs)
+        if self.permissions is None:
+            self.permissions = 0
+
+    # 数据库表单操作-更新Role数据库表信息为本flask程序的
+    @staticmethod
+    def insert_roles():
+        roles = {
+            'User': [Permission.FOLLOW, Permission.COMMENT, Permission.WRITE],
+            'Moderator': [Permission.FOLLOW, Permission.COMMENT,
+                          Permission.WRITE, Permission.MODERATE],
+            'Administrator': [Permission.FOLLOW, Permission.COMMENT,
+                              Permission.WRITE, Permission.MODERATE,
+                              Permission.ADMIN],
+        }
+        default_role = 'User'
+        for r in roles:
+            role = Role.query.filter_by(name=r).first()
+            if role is None:
+                role = Role(name=r)
+            role.reset_permissions()
+            for perm in roles[r]:
+                role.add_permission(perm)
+            role.default = (role.name == default_role)
+            db.session.add(role)
+        db.session.commit()
+
+    # 数据库表单操作-增加权限
+    def add_permission(self, perm):
+        if not self.has_permission(perm):
+            self.permissions += perm
+
+    # 数据库表单操作-移除权限
+    def remove_permission(self, perm):
+        if self.has_permission(perm):
+            self.permissions -= perm
+
+    # 数据库表单操作-重置权限
+    def reset_permissions(self):
+        self.permissions = 0
+
+    # 数据库表单操作-权限设置
+    def has_permission(self, perm):
+        return self.permissions & perm == perm
 
     def __repr__(self):
         return '<Role %r>' % self.name
 
 
+# 数据库用户模型（表）
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -24,6 +83,22 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
+    name = db.Column(db.String(64))
+    location = db.Column(db.String(64))
+    about_me = db.Column(db.Text())
+    member_since = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-注册时间
+    last_seen = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-上次登录时间
+    user_avatar = db.Column(db.String(128), default=None)  # 用户头像
+
+    # 初始化
+    # 赋予角色（普通用户使用默认角色，管理员则为Administrator）
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        if self.role is None:
+            if self.email == current_app.config['FLASK_ADMIN']:
+                self.role = Role.query.filter_by(name='Administrator').first()
+            if self.role is None:
+                self.role = Role.query.filter_by(default=True).first()
 
     # 将password函数转为属性，通过werkzeug实现加密
     @property
@@ -101,11 +176,37 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
+    # 权限管理-检查用户权限
+    def can(self, perm):
+        return self.role is not None and self.role.has_permission(perm)
+
+    # 权限管理-判断是否是管理员
+    def is_administrator(self):
+        return self.can(Permission.ADMIN)
+
+    # 获取最新时间
+    def ping(self):
+        self.last_seen = datetime.utcnow()
+        db.session.add(self)
+
     def __repr__(self):
         return '<User %r>' % self.username
 
 
-# 回调函数
+# 权限管理-继承Flask-Login提供的匿名基类
+class AnonymousUser(AnonymousUserMixin):
+    def can(self, permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+
+# 权限管理-匿名用户默认权限
+login_manager.anonymous_user = AnonymousUser
+
+
+# 绑定login_manger登录函数
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))

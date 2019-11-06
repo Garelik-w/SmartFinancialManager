@@ -6,3 +6,9 @@ main = Blueprint('main', __name__)
 
 # 从web包中导入views和errors和两个蓝本路由
 from . import views, errors
+from ..dbmodels import Permission
+
+
+@main.app_context_processor
+def inject_permissions():
+    return dict(Permission=Permission)
