@@ -7,7 +7,7 @@
     {% if user.user_avatar %}
     <img class="img-rounded profile-thumbnail" src="{{ user.user_avatar }}" width="256" height="256">
     {% else %}
-    <img class="img-rounded profile-thumbnail" src="/static/avatar/default.jpg">
+    <img class="img-rounded profile-thumbnail" src="/static/avatar/default.jpg" width="256" height="256">
     {% endif %}
     <h1>{{ user.username }}</h1>
     <div class="profile-header">
