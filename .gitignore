@@ -8,5 +8,5 @@ __pycache__
 
 # Private
 private.py
-#/app/static/avatar/
+/app/static/avatar/
 !/app/static/avatar/default.jpg
