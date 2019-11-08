@@ -12,6 +12,8 @@ from config import config
 from flask_sqlalchemy import SQLAlchemy
 # flask扩展 Login用户认证状态管理
 from flask_login import LoginManager
+# flask扩展 PageDown-富文本Markdown技术
+from flask_pagedown import PageDown
 # 导入mysqlDB用以在SQLAlchemy框架下配置MySQL
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -21,6 +23,7 @@ bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
+pagedown = PageDown()
 
 # 用户认证状态管理
 login_manager = LoginManager()
@@ -40,6 +43,7 @@ def create_app(config_name):
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    pagedown.init_app(app)
 
     # 从main包导入蓝本实例，并注册启动蓝本路由
     from .main import main as main_blueprint

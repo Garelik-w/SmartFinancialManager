@@ -4,7 +4,8 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request
 from datetime import datetime
 from . import db, login_manager
-
+from markdown import markdown
+import bleach
 
 # 权限管理（位操作）
 class Permission:
@@ -89,6 +90,7 @@ class User(UserMixin, db.Model):
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-注册时间
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-上次登录时间
     user_avatar = db.Column(db.String(128), default=None)  # 用户头像
+    posts = db.relationship('Post', backref='author', lazy='dynamic')  # 关联POST模型的外键
 
     # 初始化
     # 赋予角色（普通用户使用默认角色，管理员则为Administrator）
@@ -189,6 +191,29 @@ class User(UserMixin, db.Model):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
 
+    # 生成假用户数据
+    @staticmethod
+    def generate_fake_users(count=10):
+        from sqlalchemy.exc import IntegrityError
+        from faker import Faker
+        fake = Faker()
+        i = 0
+        while i < count:
+            u = User(email=fake.email(),
+                     username=fake.user_name(),
+                     password='password',
+                     confirmed=True,
+                     name=fake.name(),
+                     location=fake.city(),
+                     about_me=fake.text(),
+                     member_since=fake.past_date())
+            db.session.add(u)
+            try:
+                db.session.commit()
+                i += 1
+            except IntegrityError:
+                db.session.rollback()
+
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -210,3 +235,42 @@ login_manager.anonymous_user = AnonymousUser
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+# 文章发布模型
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)  # Markdown文本缓存
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 外键定义，关联users表的id
+
+    # 将body字段保存的Markdown纯文本转换成html并存储在body_html
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+                        'h1', 'h2', 'h3', 'p']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags, strip=True))
+
+    # 生成假文章数据
+    @staticmethod
+    def generate_fake_posts(count=10):
+        from random import randint
+        from faker import Faker
+        fake = Faker()
+        user_count = User.query.count()
+        for i in range(count):
+            u = User.query.offset(randint(0, user_count - 1)).first()
+            p = Post(body=fake.text(),
+                     timestamp=fake.past_date(),
+                     author=u)
+            db.session.add(p)
+        db.session.commit()
+
+
+# SQLAlchemy的set事件监听：只要实例的Body值设了新值，就会调用函数
+db.event.listen(Post.body, 'set', Post.on_changed_body)

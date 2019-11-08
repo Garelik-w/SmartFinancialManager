@@ -1,22 +1,45 @@
 from flask import render_template, abort, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
-from ..dbmodels import User, Role
+from ..dbmodels import Permission, User, Role, Post
 from .. import db
 from ..decorators import admin_required
-from .forms import EditProfileForm, EditProfileAdminForm
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm
 from . import main  # 导入蓝本对象
 
 # Home页
-@main.route('/')
+@main.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('home.html')
+    form = PostForm()
+    if current_user.can(Permission.WRITE) and form.validate_on_submit():
+        # POST && CAN
+        post = Post(body=form.body.data,
+                    author=current_user._get_current_object())
+        db.session.add(post)
+        db.session.commit()
+        return redirect(url_for('main.home'))
+    # GET
+    page = request.args.get('page', 1, type=int)
+    # 获取分页对象实现分页处理
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('home.html', form=form, posts=posts,
+                           pagination=pagination)
 
 
 # 资料编辑器-用户资料页面
 @main.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template('user.html', user=user)
+    page = request.args.get('page', 1, type=int)
+    # 获取文章列表，按时间戳排序，并用分页技术处理
+    pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('user.html', user=user, posts=posts,
+                           pagination=pagination)
 
 
 # 资料编辑器-普通用户编辑资料
@@ -81,6 +104,33 @@ def edit_profile_admin(id):
     form.location.data = user.location
     form.about_me.data = user.about_me
     return render_template('edit_profile.html', form=form, user=user)
+
+
+# 文本编辑器-文本页面
+# 每个文本内容都对应一个URL链接
+@main.route('/post/<int:id>')
+def post(id):
+    post = Post.query.get_or_404(id)
+    return render_template('post.html', posts=[post])
+
+
+# 文本编辑器-文本内容修改
+@main.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    post = Post.query.get_or_404(id)
+    if current_user != post.author and \
+            not current_user.can(Permission.ADMIN):
+        abort(403)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.body = form.body.data
+        db.session.add(post)
+        db.session.commit()
+        flash('The post has been updated.')
+        return redirect(url_for('.post', id=post.id))
+    form.body.data = post.body
+    return render_template('edit_post.html', form=form)
 
 
 # # flask 导入上下文对象和必备函数

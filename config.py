@@ -17,6 +17,8 @@ class Config:
     # 配置数据库信息
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.getcwd() + '/app/static/avatar/'
+    # 设置分页显示信息
+    FLASK_POSTS_PER_PAGE = 20
 
     @staticmethod
     def init_app(app):

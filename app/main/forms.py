@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, BooleanField, SubmitField, FileField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
+from flask_pagedown.fields import PageDownField
 from ..dbmodels import Role, User
 
 
@@ -52,4 +53,10 @@ class EditProfileAdminForm(FlaskForm):
 # 用户信息表单
 class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+# 文章发布表单
+class PostForm(FlaskForm):
+    body = PageDownField("What's on your mind?", validators=[DataRequired()])
     submit = SubmitField('Submit')

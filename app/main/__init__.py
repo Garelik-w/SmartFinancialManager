@@ -9,6 +9,7 @@ from . import views, errors
 from ..dbmodels import Permission
 
 
+# 蓝本模板调用会自动插入词典参数（钩子函数）
 @main.app_context_processor
 def inject_permissions():
     return dict(Permission=Permission)

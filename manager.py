@@ -14,7 +14,7 @@ from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 # 从app构造文件导入工厂函数和相关初始化实例
 from app import create_app, db
-from app.dbmodels import User, Role, Permission
+from app.dbmodels import User, Role, Permission, Post
 
 app = create_app('development')
 manager = Manager(app)  # flask-script命令行操作初始化
@@ -23,7 +23,7 @@ migrate = Migrate(app, db)  # flask-Migrate数据库迁移初始化
 # shell命令调试用(flask-script)
 @app.shell_context_processor
 def make_shell_context():
-    return dict(db=db, User=User, Role=Role, Permission=Permission)
+    return dict(db=db, User=User, Role=Role, Permission=Permission, Post=Post)
 
 
 manager.add_command('migrate', MigrateCommand)
