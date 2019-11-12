@@ -19,6 +19,7 @@ class Config:
     UPLOAD_FOLDER = os.getcwd() + '/app/static/avatar/'
     # 设置分页显示信息
     FLASK_POSTS_PER_PAGE = 20
+    FLASK_FOLLOWERS_PER_PAGE = 50
 
     @staticmethod
     def init_app(app):

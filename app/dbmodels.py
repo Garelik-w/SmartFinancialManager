@@ -7,13 +7,29 @@ from . import db, login_manager
 from markdown import markdown
 import bleach
 
+
 # 权限管理（位操作）
+# 1.关注
+# 2.评论
+# 3.写文章
+# 4.修改
+# 5.管理员
 class Permission:
     FOLLOW = 1
     COMMENT = 2
     WRITE = 4
     MODERATE = 8
     ADMIN = 16
+
+
+# 关联表模型（社交关注系统）
+class Follow(db.Model):
+    __tablename__ = 'follows'
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # 数据库角色模型(表）
@@ -91,6 +107,18 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-上次登录时间
     user_avatar = db.Column(db.String(128), default=None)  # 用户头像
     posts = db.relationship('Post', backref='author', lazy='dynamic')  # 关联POST模型的外键
+    # 社交系统-关注的人
+    followed = db.relationship('Follow',
+                               foreign_keys=[Follow.follower_id],
+                               backref=db.backref('follower', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
+    # 社交系统-粉丝（关注我的人）
+    followers = db.relationship('Follow',
+                                foreign_keys=[Follow.followed_id],
+                                backref=db.backref('followed', lazy='joined'),
+                                lazy='dynamic',
+                                cascade='all, delete-orphan')
 
     # 初始化
     # 赋予角色（普通用户使用默认角色，管理员则为Administrator）
@@ -190,6 +218,38 @@ class User(UserMixin, db.Model):
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
+
+    # 社交系统-关注指定用户
+    def follow(self, user):
+        if not self.is_following(user):
+            f = Follow(follower=self, followed=user)
+            db.session.add(f)
+
+    # 社交系统-取消关注指定用户
+    def unfollow(self, user):
+        f = self.followed.filter_by(followed_id=user.id).first()
+        if f:
+            db.session.delete(f)
+
+    # 社交系统-查询指定用户是否是我关注的人
+    def is_following(self, user):
+        if user.id is None:
+            return False
+        return self.followed.filter_by(
+            followed_id=user.id).first() is not None
+
+    # 社交系统-查询指定用户是否是粉丝
+    def is_followed_by(self, user):
+        if user.id is None:
+            return False
+        return self.followers.filter_by(
+            follower_id=user.id).first() is not None
+
+    # 社交系统-联结查询-查询所有关注用户的发布文章
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id) \
+            .filter(Follow.follower_id == self.id)
 
     # 生成假用户数据
     @staticmethod

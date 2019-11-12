@@ -1,8 +1,8 @@
-from flask import render_template, abort, redirect, url_for, flash, request, current_app
+from flask import render_template, abort, redirect, url_for, flash, request, current_app, make_response
 from flask_login import login_required, current_user
 from ..dbmodels import Permission, User, Role, Post
 from .. import db
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
 from . import main  # 导入蓝本对象
 
@@ -11,21 +11,29 @@ from . import main  # 导入蓝本对象
 def home():
     form = PostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
-        # POST && CAN
+        # POST && PERMMiSS
         post = Post(body=form.body.data,
                     author=current_user._get_current_object())
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('main.home'))
     # GET
-    page = request.args.get('page', 1, type=int)
+    # 判断是否只显示关注的用户的文章
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts
+    else:
+        query = Post.query
     # 获取分页对象实现分页处理
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+    page = request.args.get('page', 1, type=int)
+    pagination = query.order_by(Post.timestamp.desc()).paginate(
         page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     return render_template('home.html', form=form, posts=posts,
-                           pagination=pagination)
+                           show_followed=show_followed, pagination=pagination)
 
 
 # 资料编辑器-用户资料页面
@@ -131,6 +139,96 @@ def edit(id):
         return redirect(url_for('.post', id=post.id))
     form.body.data = post.body
     return render_template('edit_post.html', form=form)
+
+
+# 社交系统-功能-关注指定用户
+@main.route('/follow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('Invalid user.')
+        return redirect(url_for('.home'))
+    if current_user.is_following(user):
+        flash('You are already following this user.')
+        return redirect(url_for('.user', username=username))
+    current_user.follow(user)
+    db.session.commit()
+    flash('You are now following %s.' % username)
+    return redirect(url_for('.user', username=username))
+
+
+# 社交系统-功能-取消关注指定用户
+@main.route('/unfollow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('Invalid user.')
+        return redirect(url_for('.home'))
+    if not current_user.is_following(user):
+        flash('You are not following this user.')
+        return redirect(url_for('.user', username=username))
+    current_user.unfollow(user)
+    db.session.commit()
+    flash('You are not following %s anymore.' % username)
+    return redirect(url_for('.user', username=username))
+
+
+# 社交系统-查看粉丝的页面
+@main.route('/followers/<username>')
+def followers(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('Invalid user.')
+        return redirect(url_for('.home'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followers.paginate(
+        page, per_page=current_app.config['FLASK_FOLLOWERS_PER_PAGE'],
+        error_out=False)
+    follows = [{'user': item.follower, 'timestamp': item.timestamp}
+               for item in pagination.items]
+    return render_template('followers.html', user=user, title="Followers of",
+                           endpoint='.followers', pagination=pagination,
+                           follows=follows)
+
+
+# 社交系统-查看关注的人的页面
+@main.route('/followed_by/<username>')
+def followed_by(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('Invalid user.')
+        return redirect(url_for('.home'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followed.paginate(
+        page, per_page=current_app.config['FLASK_FOLLOWERS_PER_PAGE'],
+        error_out=False)
+    follows = [{'user': item.followed, 'timestamp': item.timestamp}
+               for item in pagination.items]
+    return render_template('followers.html', user=user, title="Followed by",
+                           endpoint='.followed_by', pagination=pagination,
+                           follows=follows)
+
+
+# 社交系统-功能-显示所有用户的文章
+@main.route('/all')
+@login_required
+def show_all():
+    resp = make_response(redirect(url_for('.home')))
+    resp.set_cookie('show_followed', '', max_age=30*24*60*60)
+    return resp
+
+
+# 社交系统-功能-仅显示关注用户的文章
+@main.route('/followed')
+@login_required
+def show_followed():
+    resp = make_response(redirect(url_for('.home')))
+    resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
+    return resp
 
 
 # # flask 导入上下文对象和必备函数
