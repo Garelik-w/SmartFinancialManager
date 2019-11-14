@@ -8,11 +8,11 @@ from markdown import markdown
 import bleach
 
 
-# 权限管理（位操作）
+# 用户系统-权限管理（位操作）
 # 1.关注
 # 2.评论
 # 3.写文章
-# 4.修改
+# 4.审核
 # 5.管理员
 class Permission:
     FOLLOW = 1
@@ -22,7 +22,7 @@ class Permission:
     ADMIN = 16
 
 
-# 关联表模型（社交关注系统）
+# 社交系统-关联表模型（社交关注系统）
 class Follow(db.Model):
     __tablename__ = 'follows'
     follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
@@ -32,7 +32,7 @@ class Follow(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-# 数据库角色模型(表）
+# 用户系统-数据库角色模型(表）
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
@@ -91,7 +91,7 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 
-# 数据库用户模型（表）
+# 用户系统-数据库用户模型（表）
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -119,6 +119,8 @@ class User(UserMixin, db.Model):
                                 backref=db.backref('followed', lazy='joined'),
                                 lazy='dynamic',
                                 cascade='all, delete-orphan')
+    # 社交系统-评论（一对多关系类型）
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
     # 初始化
     # 赋予角色（普通用户使用默认角色，管理员则为Administrator）
@@ -297,14 +299,16 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# 文章发布模型
+# 社交系统-文章发布模型
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)  # Markdown文本缓存
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 外键定义，关联users表的id
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 多对一关系类型：外键定义，关联users表的id
+    # 社交系统-评论（一对多关系类型）
+    comments = db.relationship('Comment', backref='post', lazy='dynamic')
 
     # 将body字段保存的Markdown纯文本转换成html并存储在body_html
     @staticmethod
@@ -332,5 +336,26 @@ class Post(db.Model):
         db.session.commit()
 
 
+# 社交系统-评论模型
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    disabled = db.Column(db.Boolean)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'code', 'em', 'i',
+                        'strong']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags, strip=True))
+
+
 # SQLAlchemy的set事件监听：只要实例的Body值设了新值，就会调用函数
 db.event.listen(Post.body, 'set', Post.on_changed_body)
+db.event.listen(Comment.body, 'set', Comment.on_changed_body)

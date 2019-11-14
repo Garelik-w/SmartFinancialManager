@@ -50,13 +50,19 @@ class EditProfileAdminForm(FlaskForm):
             raise ValidationError('Username already in use.')
 
 
-# 用户信息表单
+# 用户系统-用户信息表单
 class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
-# 文章发布表单
+# 社交系统-文章发布表单
 class PostForm(FlaskForm):
     body = PageDownField("What's on your mind?", validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+# 社交系统-评论表单
+class CommentForm(FlaskForm):
+    body = StringField('Enter your comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
