@@ -45,13 +45,17 @@ def create_app(config_name):
     login_manager.init_app(app)
     pagedown.init_app(app)
 
-    # 从main包导入蓝本实例，并注册启动蓝本路由
+    # 导入注册main蓝本路由
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    # 导入启动auth蓝本路由
+    # 导入注册auth蓝本路由
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')  # 设置增加蓝本路由的前缀
+
+    # 导入注册api蓝本路由
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix='/api/v1.0')
 
     return app
 
