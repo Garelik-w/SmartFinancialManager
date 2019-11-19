@@ -5,6 +5,7 @@ Pipfile
 
 # Packages
 __pycache__
+/tmp/
 
 # Private
 private.py

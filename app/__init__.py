@@ -30,6 +30,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.session_protection = 'strong'
 
+
 # 程序工厂函数（flask实例并初始化各模块）
 def create_app(config_name):
     app = Flask(__name__)

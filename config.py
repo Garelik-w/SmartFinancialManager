@@ -16,11 +16,14 @@ class Config:
     FLASK_ADMIN = 'zhuiyiyydyy@163.com'  # 管理员地址
     # 配置数据库信息
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.getcwd() + '/app/static/avatar/'
+    UPLOAD_FOLDER = os.getcwd() + '/app/static/avatar/'  # 头像上传路径
     # 设置分页显示信息
     FLASK_POSTS_PER_PAGE = 20
     FLASK_FOLLOWERS_PER_PAGE = 50
     FLASK_COMMENTS_PER_PAGE = 30
+    # 缓慢查询的超时设置
+    SQLALCHEMY_RECORD_QUERIES = True  # 允许在生产环境下使用
+    FLASK_SLOW_DB_QUERY_TIME = 0.5  # 查询超时时间0.5s
 
     @staticmethod
     def init_app(app):
@@ -33,18 +36,47 @@ class DevelopmentConfig(Config):
     MAIL_USERNAME = Private.MAIL_USERNAME
     MAIL_PASSWORD = Private.MAIL_PASSWORD
     # 配置数据库信息
-    SQLALCHEMY_DATABASE_URI = Private.SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = Private.SQLALCHEMY_DEVELOP_DATABASE_URI
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'mysql://'
+    WTF_CSRF_ENABLED = False  # 禁用flask-WTF的CSRF
+    # 配置数据库信息
+    SQLALCHEMY_DATABASE_URI = Private.SQLALCHEMY_TEST_DATABASE_URI
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'mysql://'
+    # 配置数据库信息
+    SQLALCHEMY_DATABASE_URI = Private.SQLALCHEMY_PRODUCTION_DATABASE_URI
+    # 配置邮箱用户信息
+    MAIL_USERNAME = Private.MAIL_USERNAME
+    MAIL_PASSWORD = Private.MAIL_PASSWORD
+
+    # 部署-日志记录器
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+
+        # email errors to the administrators
+        import logging
+        from logging.handlers import SMTPHandler
+        credentials = None
+        secure = None
+        if getattr(cls, 'MAIL_USERNAME', None) is not None:
+            credentials = (cls.MAIL_USERNAME, cls.MAIL_PASSWORD)
+            if getattr(cls, 'MAIL_USE_TLS', None):
+                secure = ()
+        # 基于SMTP简单邮件协议服务器发送邮件
+        mail_handler = SMTPHandler(
+            mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
+            fromaddr=cls.FLASK_MAIL_SENDER,
+            toaddrs=[cls.FLASK_ADMIN],
+            subject=cls.FLASK_MAIL_SUBJECT_PREFIX + ' Application Error',
+            credentials=credentials,
+            secure=secure)
+        mail_handler.setLevel(logging.ERROR)
+        app.logger.addHandler(mail_handler)
 
 
 # 在程序工厂函数根据需要导入对应的配置
