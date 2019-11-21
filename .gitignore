@@ -3,4 +3,11 @@ Pipfile.lock
 Pipfile
 .idea
 
-# else
+# Packages
+__pycache__
+/tmp/
+
+# Private
+private.py
+/app/static/avatar/
+!/app/static/avatar/default.jpg
