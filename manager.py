@@ -18,14 +18,14 @@ if os.environ.get('FLASK_COVERAGE'):
 
 
 # flask扩展 Migrate数据库迁移工具
-from flask_migrate import Migrate, upgrade
+from flask_migrate import Migrate, upgrade, MigrateCommand
 # 从app构造文件导入工厂函数和相关初始化实例
 from app import create_app, db
 from app.dbmodels import User, Role, Follow, Permission, Post, Comment
 # flask扩展 Script命令行工具
 from flask_script import Manager, Shell
 
-app = create_app('development')
+app = create_app('production')
 migrate = Migrate(app, db)  # flask-Migrate数据库迁移初始化
 
 # flask-click：支持命令行上下文对象
@@ -81,15 +81,14 @@ def profile(length, profile_dir):
     app.run()
 
 
-# 部署流出-自动更新数据库表并创建角色表
+# 部署初始化-创建角色表并建立管理员用户
 @app.cli.command()
-def deploy():
-    """Run deployment tasks."""
-    # migrate database to latest revision
-    upgrade()
-
-    # create or update user roles
+def InitDataBase():
+    db.create_all()
     Role.insert_roles()
+    Admin = User(email=app.config['FLASK_ADMIN'], password='w123456', username='GarryLin-Admin', confirmed=True)
+    db.session.add(Admin)
+    db.session.commit()
 
     # ensure all users are following themselves
     # User.add_self_follows()  # 我的系统没有关注自己的这个操作
@@ -97,8 +96,7 @@ def deploy():
 
 # flask-script增加命令（暂不是用flask-script）
 manager = Manager(app)  # flask-script命令行操作初始化
-# manager.add_command('migrate', MigrateCommand)
-# manager.add_command("shell", Shell(make_context=make_shell_context))
+manager.add_command('db', MigrateCommand)
 
 # flask-script：增加script_profile命令
 # 测试系统-源码分析器（补充click命令行）
