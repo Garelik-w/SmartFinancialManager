@@ -1,11 +1,11 @@
 Dear {{ user.username }},
 
-To confirm your new email address click on the following link:
+为了认证您新的邮箱地址，请您点击下面的链接:
 
 {{ url_for('auth.change_email', token=token, _external=True) }}
 
-Sincerely,
+祝您生活愉快,
 
 The SmartFinancialManager Team
 
-Note: replies to this email address are not monitored.
+备注: 系统会忽略对此邮件的回复.

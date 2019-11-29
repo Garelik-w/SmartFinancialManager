@@ -1,8 +1,8 @@
 <p>Dear {{ user.username }},</p>
-<p>Welcome to <b>SmartFinancialManager</b>!</p>
-<p>To confirm your account please <a href="{{ url_for('auth.confirm', token=token, _external=True) }}">click here</a>.</p>
-<p>Alternatively, you can paste the following link in your browser's address bar:</p>
+<p>欢迎加入 <b>智能金融管家</b>!</p>
+<p>为了认证您的账户，请 <a href="{{ url_for('auth.confirm', token=token, _external=True) }}">点击这里</a>.</p>
+<p>或者, 您可以粘贴下面的链接到您的浏览器地址栏打开:</p>
 <p>{{ url_for('auth.confirm', token=token, _external=True) }}</p>
-<p>Sincerely,</p>
+<p>祝您生活愉快,</p>
 <p>The SmartFinancialManager Team</p>
-<p><small>Note: replies to this email address are not monitored.</small></p>
+<p><small>备注: 系统会忽略对此邮件的回复.</small></p>

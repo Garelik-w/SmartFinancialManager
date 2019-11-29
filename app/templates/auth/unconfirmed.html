@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}SmartFinancialManager - Confirm your account{% endblock %}
+{% block title %}智能金融管家 - 认证您的账户{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
     <h1>
-        Hello, {{ current_user.username }}!
+        您好, {{ current_user.username }}!
     </h1>
-    <h3>You have not confirmed your account yet.</h3>
+    <h3>您还没有认证您的账户.</h3>
     <p>
-        Before you can access this site you need to confirm your account.
-        Check your inbox, you should have received an email with a confirmation link.
+        在您使用智能金融管家的功能前，需要先认证您的账户.
+        检查您注册的邮箱, 应该已经收到一封附带认证链接的邮件.
     </p>
     <p>
-        Need another confirmation email?
-        <a href="{{ url_for('auth.resend_confirmation') }}">Click here</a>
+        需要重发认证邮件?
+        <a href="{{ url_for('auth.resend_confirmation') }}">点击这里！</a>
     </p>
 </div>
 {% endblock %}

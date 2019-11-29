@@ -1,13 +1,13 @@
 Dear {{ user.username }},
 
-Welcome to SmartFinancialManager!
+欢迎加入 智能金融管家!
 
-To confirm your account please click on the following link:
+为了认证您的账户，请您点击下面的链接:
 
 {{ url_for('auth.confirm', token=token, _external=True) }}
 
-Sincerely,
+祝您生活愉快,
 
 The SmartFinancialManager Team
 
-Note: replies to this email address are not monitored.
+备注: 系统会忽略对此邮件的回复

@@ -1,6 +1,6 @@
 {% extends "bootstrap/base.html" %}
 
-{% block title %}SmartFinancialManager{% endblock %}
+{% block title %}智能金融管家{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -19,18 +19,18 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">SmartFinancialManager</a>
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">智能金融管家</a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="{{ url_for('main.home') }}">Home</a></li>
+                <li><a href="{{ url_for('main.home') }}">主页</a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+                <li><a href="{{ url_for('main.user', username=current_user.username) }}">概况</a></li>
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.can(Permission.MODERATE) %}
-                <li><a href="{{ url_for('main.moderate') }}">Moderate Comments</a></li>
+                <li><a href="{{ url_for('main.moderate') }}">评论管理</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated %}
                 <li class="dropdown">
@@ -38,16 +38,16 @@
                         {% if current_user.user_avatar %}
                             <img src="{{ current_user.user_avatar }}" width="18" height="18">
                         {% endif %}
-                        Account <b class="caret"></b>
+                        用户 <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
-                        <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
-                        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                        <li><a href="{{ url_for('auth.change_password') }}">修改密码</a></li>
+                        <li><a href="{{ url_for('auth.change_email_request') }}">修改邮箱地址</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">登出</a></li>
                     </ul>
                 </li>
                 {% else %}
-                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+                <li><a href="{{ url_for('auth.login') }}">登录</a></li>
                 {% endif %}
             </ul>
         </div>
