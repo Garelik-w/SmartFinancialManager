@@ -52,7 +52,7 @@ def home():
                            show_followed=show_followed, pagination=pagination)
 
 
-# 资料编辑器-用户资料页面
+# 资料编辑器-用户中心页面
 @main.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
