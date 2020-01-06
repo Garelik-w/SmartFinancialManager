@@ -1,0 +1,84 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}智能金融管家{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- 元数据 -->
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="Smart Financial Manager" name="keywords">
+<meta content="Smart Financial Manager" name="description">
+<!-- 页面标签图片 -->
+<link href="{{ url_for('static', filename='favicon.ico') }}" rel="shortcut icon">
+<!-- CSS外部样式表 -->
+<link href="{{ url_for('static', filename='css/home-style.css') }}" rel="stylesheet">
+<!-- CSS外部样式表:Font awesome是一款基于css框架的网页字体图标库 -->
+<link href="{{ url_for('static', filename='lib/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<!-- 初始页面 -->
+{% block hero -%}
+{%- endblock hero %}
+<!-- 原内容 -->
+{{ super() }}
+{% endblock %}
+
+<!--==========================
+导航栏
+============================-->
+{% block navbar %}
+{{ super() }}
+<header id="header">
+<div class="container">
+
+  <div id="logo" class="pull-left">
+    <a href="#hero"><img src="/static/img/logo.png" alt="" title="" /></img></a>
+    <!-- Uncomment below if you prefer to use a text image -->
+    <!--<h1><a href="#hero">Header 1</a></h1>-->
+  </div>
+
+  <nav id="nav-menu-container">
+    <ul class="nav-menu">
+      <li class="menu-active"><a href="#hero">Home</a></li>
+      <li><a href="#talk">TALK</a></li>
+      <li><a href="#about">About Me</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#register">Register</a></li>
+      <li><a href="#contact">Contact Us</a></li>
+      <! -- 这里预留一个超级终端给开发者,普通用户看不到也点不到-->
+      <li><a href="#team"></a></li>
+      <li class="menu-has-children user-active"><a href="">用户中心</a>
+        <ul>
+          <li><a href="#">Drop Down 1</a></li>
+          <li><a href="#">Drop Down 2</a></li>
+          <li><a href="#">Drop Down 3</a></li>
+          <li><a href="#">Drop Down 4</a></li>
+          <li><a href="#">Drop Down 5</a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+  <!-- #nav-menu-container -->
+</div>
+</header>
+<!-- #header -->
+{% endblock %}
+
+<!--==========================
+脚本相关库引入
+============================-->
+{% block scripts %}
+{{ super() }}
+<!-- 多级下拉菜单 -->
+<script src="{{ url_for('static', filename='lib/superfish/hoverIntent.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/superfish/superfish.min.js') }}"></script>
+<!-- 文字动态效果（文字切换入场） -->
+<script src="{{ url_for('static', filename='lib/morphext/morphext.min.js') }}"></script>
+<!-- 页面上下滑动效果 + 网站滚动固定浮动层（用以设定导航栏） -->
+<script src="{{ url_for('static', filename='lib/wow/wow.min.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/stickyjs/sticky.js') }}"></script>
+<!-- 自定义动画（设定不同元素的滑动频率） -->
+<script src="{{ url_for('static', filename='lib/easing/easing.js') }}"></script>
+{% endblock %}

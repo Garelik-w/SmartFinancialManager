@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}智能金融管家 - 主页{% endblock %}
+
+<!--==========================
+导入脚本
+============================-->
+{% block scripts %}
+{{ super() }}
+<!-- 页面动态逻辑相关的脚本 -->
+<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+<!-- contact us段落字符检验和邮件发送脚本 -->
+<script src="{{ url_for('static', filename='contactform/contactform.js') }}"></script>
+{% endblock %}
+
+
+<!--==========================
+初始页面
+============================-->
+{% block hero %}
+{{ super() }}
+<!-- 页面刷新等待动画 -->
+<div id="preloader"></div>
+
+<!-- 初始展示页面设计 -->
+<section id="hero">
+<div class="hero-container">
+  <div class="wow fadeIn">
+    <div class="hero-logo">
+      <img class="" src="/static/img/logo.png" alt="SFM">
+    </div>
+
+    <h1>Welcome to Smart Financial Manager</h1>
+    <h2>我能<span class="rotating">为您提供稳定的粉丝增值服务, 解放您的生产效率, 提供强大的金融工具</span></h2>
+    <div class="actions">
+      <a href="#talk" class="btn-get-started">启动</a>
+      <a href="#services" class="btn-services">我的智能管家</a>
+    </div>
+  </div>
+</div>
+</section>
+{% endblock %}
+
+
+<!--==========================
+页面主要内容
+============================-->
+{% block content %}
+{{ super() }}
+
+<!--========================== 智能搜索引擎（TALK）============================-->
+<section id="talk">
+  <div class="container wow fadeInUp">
+    <! -- Talk背景图片通过CSS设置 -->
+    <! -- Talk图片标题 -->
+    <div class="row">
+      <br/><br/><br/><br/>
+      <div class="col-md-12" style="text-align:center;">
+        <img class="" src="/static/img/talk.png">
+        <p class="section-description">
+          您可以向我咨询股票相关的问题（如：300326怎么样？）
+        </p>
+      </div>
+    </div>
+    <! -- Talk搜索框 -->
+    <div class="row">
+      <div class="container" style="margin-top: 10px">
+        <div class="col-lg-8 col-lg-offset-2">
+            {{ wtf.quick_form(form) }}
+        </div>
+      </div>
+    </div>
+    <! -- Talk底部换行 -->
+    <div class="row">
+      <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    </div>
+  </div>
+</section>
+
+<!--========================== 产品介绍（About Me) ============================-->
+<section id="about">
+  <! -- About标题 -->
+  <div class="container wow fadeInUp">
+    <div class="row">
+      <div class="col-md-12">
+        <h3 class="section-title">产品介绍</h3>
+        <div class="section-title-divider"></div>
+        <p class="section-description">智能金融管家旨在解决财经自媒体工作中遇到的问题，解放生成力，提供强大的后勤支撑！</p>
+      </div>
+    </div>
+  </div>
+  <! --About正文（图片+文字)-- >
+  <div class="container about-container wow fadeInUp">
+    <div class="row">
+      <div class="col-md-6 col-md-push-6 about-content">
+        <h2 class="about-title">我能为您提供完整的解决方案！</h2>
+        <br/>
+        <p class="about-text">
+            智能金融管家可以提供强大的金融检索工具，根据个股“最新的消息面、基本面和技术面”综合量化分析，得出最科学全面的评价报表，据此来给您提出最成熟的建议。
+        </p>
+        <br/>
+        <p class="about-text">
+            作为财经自媒体从业人员，智能金融管家能提供您全套的自媒体运作方案，帮助您解决包括粉丝管理、粉丝渠道导流、文章自动发布、付费管理、粉丝增殖等问题。
+        </p>
+        <br/>
+        <p class="about-text">
+            作为财经从业人员，智能金融管家能完全解放您的生成力，强大的智能复盘系统，能实现一键式复盘，导出完整报表，一键生成每日交易策略。
+        </p>
+        <br/>
+      </div>
+    </div>
+  </div>
+  <br/>
+</section>
+
+
+<!--========================== 核心服务：私人智能管家（Services) ============================-->
+<section id="services">
+<div class="container wow fadeInUp">
+  <! --Service标题-- >
+  <div class="row">
+    <div class="col-md-12">
+      <h3 class="section-title">核心服务：私人智能管家</h3>
+      <div class="section-title-divider"></div>
+      <p class="section-description">独属于您的私人智能管家，提供一系列定制化服务，包括粉丝增殖管理、一键式生产力解放工具等</p>
+      <br/><br/>
+    </div>
+  </div>
+  <! --Service内容-- >
+  <div class="row">
+    <div class="col-md-4 service-item">
+      <! 调用Font awesome图表库service-icon >
+      <div class="service-icon"><i class="fa fa-desktop"></i></div>
+      <h4 class="service-title"><a href="">粉丝跨平台管理</a></h4>
+      <p class="service-description">私人智能管家能统筹您所有平台渠道的粉丝，做全局的科学统计和管理</p>
+    </div>
+    <div class="col-md-4 service-item">
+      <div class="service-icon"><i class="fa fa-bar-chart"></i></div>
+      <h4 class="service-title"><a href="">粉丝渠道导流</a></h4>
+      <p class="service-description">私人智能管家能定位粉丝的不同渠道身份，针对您特定平台做粉丝的渠道导流</p>
+    </div>
+    <div class="col-md-4 service-item">
+      <div class="service-icon"><i class="fa fa-paper-plane"></i></div>
+      <h4 class="service-title"><a href="">一键式复盘</a></h4>
+      <p class="service-description">私人智能管家能根据您的需求实现一键式复盘，自动生成完整齐全的复盘策略报表</p>
+    </div>
+    <div class="col-md-4 service-item">
+      <div class="service-icon"><i class="fa fa-photo"></i></div>
+      <h4 class="service-title"><a href="">一键式文章生成</a></h4>
+      <p class="service-description">私人智能管家能根据您的需求实现一键式策略文章生成，并自动按对应平台渠道的格式整理排列，自动发布</p>
+    </div>
+    <div class="col-md-4 service-item">
+      <div class="service-icon"><i class="fa fa-road"></i></div>
+      <h4 class="service-title"><a href="">个人交易管理</a></h4>
+      <p class="service-description">私人智能管家能针对全部平台的粉丝，直接实现订阅和文章发布，实现平台外的增值收益</p>
+    </div>
+    <div class="col-md-4 service-item">
+      <div class="service-icon"><i class="fa fa-shopping-bag"></i></div>
+      <h4 class="service-title"><a href="">私人定制</a></h4>
+      <p class="service-description">私人智能管家能针对您更多的个性化需求，定制私人服务</p>
+    </div>
+  </div>
+  <br/><br/>
+</div>
+</section>
+
+<!--========================== 申请私人智能管家：注册VIP会员（Register) ============================-->
+<section id="register">
+<div class="container wow fadeInUp">
+  <br/><br/>
+  <! --私人管家贴图和入口-- >
+  <div class="row register-photo">
+    <div class="col-md-8">
+      <h3 class="register-title">申请私人智能管家</h3>
+      <p class="register-text"> 注册申请一个私人智能管家，即可解锁全部核心服务，给您提供全套解决方案！</p>
+    </div>
+    <div class="col-md-4 register-btn-container">
+      <a class="register-btn" href="#">申请</a>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="register-content">
+  <! --普通会员注册入口-- >
+  <! 因为贴图只有在section生效才会覆盖左右屏幕，所以只能把这部分分离出来>
+  <br/><br/><br/><br/>
+  <div class="row">
+    <div class="col-md-12" style="text-align:center;">
+      <a class="btn-normal-register" href="#"> 免费注册会员</a>
+    </div>
+    <div class="" style="text-align:center;font-size:16px;">
+      <br/><br/><br/>
+      <span>
+        解锁智能金融管家更多功能权限, 开放更多的金融工具免费试用！
+      </span>
+    </div>
+  </div>
+  <br/><br/><br/><br/><br/>
+</section>
+
+<!--========================== 联系方式（合作）（Contact Section) ============================-->
+<section id="contact">
+<div class="container wow fadeInUp">
+  <div class="row">
+    <div class="col-md-12">
+      <h3 class="section-title">联系我们</h3>
+      <div class="section-title-divider"></div>
+      <p class="section-description">如果您想详细咨询相关信息，或者是联系我们商业合作，可以留下您的联系方式，通过邮件反馈给我们，我们收到后会第一时间联络您</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3 col-md-push-2">
+      <div class="info">
+        <div>
+          <i class="fa fa-map-marker"></i>
+          <p>南山区生态湾科技园<br>广东, 深圳, 518000</p>
+        </div>
+
+        <div>
+          <i class="fa fa-envelope"></i>
+          <p>515337036@qq.com</p>
+        </div>
+
+        <div>
+          <i class="fa fa-phone"></i>
+          <p>+183 12** **31</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="col-md-5 col-md-push-2">
+      <div class="form">
+        <div id="sendmessage">您的邮件已经发送. Thank you!</div>
+        <div id="errormessage"></div>
+        <form action="" method="post" role="form" class="contactForm">
+          <div class="form-group">
+            <input type="text" name="name" class="form-control" id="name" placeholder="您的昵称是？" data-rule="minlen:4" data-msg="Please enter at least 4 chars" />
+            <div class="validation"></div>
+          </div>
+          <div class="form-group">
+            <input type="email" class="form-control" name="email" id="email" placeholder="您的邮箱地址是？" data-rule="email" data-msg="Please enter a valid email" />
+            <div class="validation"></div>
+          </div>
+          <div class="form-group">
+            <input type="text" class="form-control" name="subject" id="subject" placeholder="您邮件的主题是？" data-rule="minlen:4" data-msg="Please enter at least 8 chars of subject" />
+            <div class="validation"></div>
+          </div>
+          <div class="form-group">
+            <textarea class="form-control" name="message" rows="5" data-rule="required" data-msg="Please write something for us" placeholder="详细信息"></textarea>
+            <div class="validation"></div>
+          </div>
+          <div class="text-center"><button type="submit">发送消息</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!--========================== 页尾信息 ============================-->
+<footer id="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="copyright">
+            &copy; Copyright 20191219 by <strong>GarryLin-w</strong>. All Rights Reserved
+          </div>
+          <div class="credits">
+            <!--
+              All the links in the footer should remain intact.
+              You can delete the links only if you purchased the pro version.
+              Licensing information: https://bootstrapmade.com/license/
+              Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/buy/?theme=Imperial
+            -->
+<!--            Bootstrap Templates  BootstrapMade. More Templates <a href="http://www.cssmoban.com/" target="_blank" title="模板之家">模板之家</a> - Collect from <a href="http://www.cssmoban.com/" title="网页模板" target="_blank">网页模板</a>-->
+              版权所有：GarryLin-w，有任何问题可以联系：18312****31
+          </div>
+        </div>
+      </div>
+    </div>
+</footer>
+{% endblock %}
