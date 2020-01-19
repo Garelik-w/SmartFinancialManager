@@ -10,26 +10,36 @@ from app.exceptions import ValidationError
 
 
 # 用户系统-权限管理（位操作）
-# 1.关注
-# 2.评论
-# 3.写文章
-# 4.审核
-# 5.管理员
+# 1.基础功能（包括用户前后台、查看私信等功能）
+# 2.社区前台
+# 3.工具箱：一键复盘
+# 4.工具箱：深度分析
+# 5.工具箱：一键策略生成
+# 6.社区市场
+# 7.社区后台
+# 8.标签系统
+# 9.工具箱：后期扩展
+# 10.开发者权限
 class Permission:
-    FOLLOW = 1
-    COMMENT = 2
-    WRITE = 4
-    MODERATE = 8
-    ADMIN = 16
+    BASIC = 1
+    FRONTEND = 2
+    TOOLBOX_REPLAY = 4
+    TOOLBOX_ANALYSIS = 8
+    TOOLBOX_GENERATE = 16
+    MARKET = 32
+    BACKEND = 64
+    LABEL = 128
+    TOOLBOX_EX = 256
+    DEVELOPER = 512
 
 
 # 社交系统-关联表模型（社交关注系统）
 class Follow(db.Model):
     __tablename__ = 'follows'
-    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
-    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
+    # 粉丝
+    fans_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    # 关注的人
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -51,12 +61,16 @@ class Role(db.Model):
     @staticmethod
     def insert_roles():
         roles = {
-            'User': [Permission.FOLLOW, Permission.COMMENT, Permission.WRITE],
-            'Moderator': [Permission.FOLLOW, Permission.COMMENT,
-                          Permission.WRITE, Permission.MODERATE],
-            'Administrator': [Permission.FOLLOW, Permission.COMMENT,
-                              Permission.WRITE, Permission.MODERATE,
-                              Permission.ADMIN],
+            'User': [Permission.BASIC, Permission.FRONTEND],
+            'VipUser': [Permission.BASIC, Permission.FRONTEND, Permission.TOOLBOX_REPLAY,
+                        Permission.TOOLBOX_ANALYSIS, Permission.MARKET],
+            'SuperVipAdmin': [Permission.BASIC, Permission.FRONTEND, Permission.TOOLBOX_REPLAY,
+                              Permission.TOOLBOX_ANALYSIS, Permission.TOOLBOX_GENERATE, Permission.MARKET,
+                              Permission.BACKEND, Permission.LABEL],
+            'Developer': [Permission.BASIC, Permission.FRONTEND, Permission.TOOLBOX_REPLAY,
+                          Permission.TOOLBOX_ANALYSIS, Permission.TOOLBOX_GENERATE, Permission.MARKET,
+                          Permission.BACKEND, Permission.LABEL, Permission.TOOLBOX_EX,
+                          Permission.DEVELOPER],
         }
         default_role = 'User'
         for r in roles:
@@ -101,25 +115,30 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
-    name = db.Column(db.String(64))
+    tmp_token = db.Column(db.Text)
+    nickname = db.Column(db.String(64))
+    channel = db.Column(db.String(64))
     location = db.Column(db.String(64))
     about_me = db.Column(db.Text())
+    phone = db.Column(db.String(11), unique=True, index=True)
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-注册时间
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)  # 用户资料-上次登录时间
     user_avatar = db.Column(db.String(128), default=None)  # 用户头像
     posts = db.relationship('Post', backref='author', lazy='dynamic')  # 关联POST模型的外键
+    labels = db.relationship('Label', backref='user', lazy='dynamic')  # 关联LABEL模型的外键
+
     # 社交系统-关注的人
     followed = db.relationship('Follow',
-                               foreign_keys=[Follow.follower_id],
-                               backref=db.backref('follower', lazy='joined'),
+                               foreign_keys=[Follow.fans_id],
+                               backref=db.backref('fans', lazy='joined'),
                                lazy='dynamic',
                                cascade='all, delete-orphan')
     # 社交系统-粉丝（关注我的人）
-    followers = db.relationship('Follow',
-                                foreign_keys=[Follow.followed_id],
-                                backref=db.backref('followed', lazy='joined'),
-                                lazy='dynamic',
-                                cascade='all, delete-orphan')
+    fans = db.relationship('Follow',
+                           foreign_keys=[Follow.followed_id],
+                           backref=db.backref('followed', lazy='joined'),
+                           lazy='dynamic',
+                           cascade='all, delete-orphan')
     # 社交系统-评论（一对多关系类型）
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
@@ -129,11 +148,11 @@ class User(UserMixin, db.Model):
         super(User, self).__init__(**kwargs)
         if self.role is None:
             if self.email == current_app.config['FLASK_ADMIN']:
-                self.role = Role.query.filter_by(name='Administrator').first()
+                self.role = Role.query.filter_by(name='Developer').first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
 
-    # 将password函数转为属性，通过werkzeug实现加密
+    # 用户系统-加密：将password函数转为属性，通过werkzeug实现加密
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -142,16 +161,16 @@ class User(UserMixin, db.Model):
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    # 用户管理-验证密码
+    # 用户系统-验证密码
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # 用户注册-创建确认令牌，过期时间为60min
+    # 用户系统-大V/普通用户注册：创建确认令牌，过期时间为60min
     def generate_confirmation_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'confirm': self.id}).decode('utf-8')  # 加密信息confirm
 
-    # 用户注册-检验令牌，并和已登录用户匹配
+    # 用户系统-大V/普通用户注册：检验令牌，并和已登录用户匹配
     def confirm(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -164,12 +183,59 @@ class User(UserMixin, db.Model):
         db.session.add(self)  # 只添加修改到会话，需要在confirm视图函数确认提交
         return True
 
-    # 忘记密码-生成重置密码确认令牌（用于忘记密码确认）
+    # 用户系统：生成社区加入链接（1个月的有效期：2592000）
+    def generate_social_token_link(self, expiration=2592000):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        token = s.dumps({'social': self.id}).decode('utf-8')
+        return url_for('auth.fans_register', token=token, _external=True)
+
+    # 用户系统-粉丝社区链接解析：解析Token并返回解析结果
+    def parser_social_token(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            # 如果秘钥到期那么会获取失败
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        data = data.get('social')
+        if User.query.get(data) is None:
+            return False
+        db.session.add(self)
+        return data
+        # user_id = data.get('social')
+        # if User.query.get(user_id) is None or user_id == self.id:
+        #     return False
+        # try:
+        #     user = User.query.filter_by(id=user_id).first()
+        #     self.follow(user)
+        # except:
+        #     return False
+        # db.session.add(self)
+        # return True
+
+    # 用户系统：生成粉丝临时身份证(临时身份6H）
+    def generate_social_temp_confirmation(self, expiration=21600):
+        return self.generate_confirmation_token(expiration)
+
+    # 用户系统-粉丝临时身份认证：认证临时Token是否过期，不会修改confirmed的值
+    def confirm_social_token(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            # 如果过期则会报错
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        if data.get('confirm') != self.id:
+            return False
+        db.session.add(self)
+        return True
+
+    # 用户系统-忘记密码：生成重置密码确认令牌（用于忘记密码确认）
     def generate_reset_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'reset': self.id}).decode('utf-8')  # 加密信息reset
 
-    # 忘记密码-重置密码（需要有密令）
+    # 用户系统-忘记密码：重置密码（需要有密令）
     # 静态方法，不可访问类属性和方法，可被类和实例调用
     @staticmethod
     def reset_password(token, new_password):
@@ -185,13 +251,13 @@ class User(UserMixin, db.Model):
         db.session.add(user)
         return True
 
-    # 修改邮箱-创建确认令牌
+    # 用户系统-修改邮箱：创建确认令牌
     def generate_email_change_token(self, new_email, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps(
             {'change_email': self.id, 'new_email': new_email}).decode('utf-8')
 
-    # 修改邮箱-实现邮箱修改
+    # 用户系统-修改邮箱：实现邮箱修改
     def change_email(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -209,44 +275,55 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
-    # 权限管理-检查用户权限
+    # 用户系统-权限管理：检查用户权限
     def can(self, perm):
         return self.role is not None and self.role.has_permission(perm)
 
-    # 权限管理-判断是否是管理员
-    def is_administrator(self):
-        return self.can(Permission.ADMIN)
+    # 用户系统-权限管理：判断是否是开发者(主要模板中用）
+    def is_developer(self):
+        return self.can(Permission.DEVELOPER)
+
+    # 用户系统-权限管理：判断是否是大V管理员(主要模板中用）
+    def is_supervipadmin(self):
+        return self.can(Permission.BACKEND)
 
     # 获取最新时间
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
 
-    # 社交系统-关注指定用户
+    # 用户系统-关注指定用户
     def follow(self, user):
         if not self.is_following(user):
-            f = Follow(follower=self, followed=user)
+            f = Follow(fans=self, followed=user)
             db.session.add(f)
 
-    # 社交系统-取消关注指定用户
+    # 用户系统-取消关注指定用户
     def unfollow(self, user):
         f = self.followed.filter_by(followed_id=user.id).first()
         if f:
             db.session.delete(f)
 
-    # 社交系统-查询指定用户是否是我关注的人
+    # 用户系统-查询指定用户是否是我关注的人
     def is_following(self, user):
         if user.id is None:
             return False
         return self.followed.filter_by(
             followed_id=user.id).first() is not None
 
-    # 社交系统-查询指定用户是否是粉丝
-    def is_followed_by(self, user):
+    # 用户系统-查询指定用户是否是粉丝
+    def is_fans(self, user):
         if user.id is None:
             return False
-        return self.followers.filter_by(
-            follower_id=user.id).first() is not None
+        return self.fans.filter_by(
+            fans_id=user.id).first() is not None
+
+    # 用户系统：查询是否关注了大V（是否加入社区）
+    def is_joining(self):
+        if self.followed.filter_by() is not None:
+            return True
+        else:
+            return False
 
     # 社交系统-联结查询-查询所有关注用户的发布文章
     @property
@@ -254,13 +331,13 @@ class User(UserMixin, db.Model):
         return Post.query.join(Follow, Follow.followed_id == Post.author_id) \
             .filter(Follow.follower_id == self.id)
 
-    # API认证-生成用户密码令牌
+    # API系统：API认证-生成用户密码令牌
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
         return s.dumps({'id': self.id}).decode('utf-8')
 
-    # API认证-确认用户密码令牌
+    # API系统：API认证-确认用户密码令牌
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -270,7 +347,7 @@ class User(UserMixin, db.Model):
             return None
         return User.query.get(data['id'])
 
-    # API-JSON资源转换
+    # API系统：API-JSON资源转换
     def to_json(self):
         json_user = {
             'url': url_for('api.get_user', id=self.id),
@@ -284,7 +361,7 @@ class User(UserMixin, db.Model):
         }
         return json_user
 
-    # 生成假用户数据
+    # 用户系统：生成假用户数据
     @staticmethod
     def generate_fake_users(count=10):
         from sqlalchemy.exc import IntegrityError
@@ -296,7 +373,7 @@ class User(UserMixin, db.Model):
                      username=fake.user_name(),
                      password='password',
                      confirmed=True,
-                     name=fake.name(),
+                     nickname=fake.name(),
                      location=fake.city(),
                      about_me=fake.text(),
                      member_since=fake.past_date())
@@ -307,16 +384,29 @@ class User(UserMixin, db.Model):
             except IntegrityError:
                 db.session.rollback()
 
+    # 用户系统：创建管理员账户
+    @staticmethod
+    def generate_admin_user():
+        r = Role.query.filter_by(name='Developer').first()
+        u = User(email=current_app.config['FLASK_ADMIN'], password='w123456', confirmed=True,
+                 username='GarryLin_admin', role=r)
+        db.session.add(u)
+        db.session.commit()
+
     def __repr__(self):
         return '<User %r>' % self.username
 
 
 # 权限管理-继承Flask-Login提供的匿名基类
 class AnonymousUser(AnonymousUserMixin):
+    # 提供和user模型一样的接口
     def can(self, permissions):
         return False
 
-    def is_administrator(self):
+    def is_supervipadmin(self):
+        return False
+
+    def is_developer(self):
         return False
 
 
@@ -330,7 +420,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# 社交系统-文章发布模型
+# 文章系统-文章发布模型
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
@@ -340,6 +430,8 @@ class Post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 多对一关系类型：外键定义，关联users表的id
     # 社交系统-评论（一对多关系类型）
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
+    # 标签系统：文章标签（一对多关系类型）
+    labels = db.relationship('Label', backref='post', lazy='dynamic')
 
     # 将body字段保存的Markdown纯文本转换成html并存储在body_html
     @staticmethod

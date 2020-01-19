@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 # ======================
 # author:GarryLin-w
-# time: 2019/11/2:17:40
+# time: 2020/1/12:16:20
 # email:515337036@qq.com
 # ======================
 
+
 from flask import Blueprint
 
-auth = Blueprint('auth', __name__)
+label = Blueprint('label', __name__)
 
-from . import views, follows
+from . import views, dbmodels

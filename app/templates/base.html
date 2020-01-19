@@ -25,13 +25,13 @@
             <ul class="nav navbar-nav">
                 <li><a href="{{ url_for('main.home') }}">主页</a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('main.user', username=current_user.username) }}">用户中心</a></li>
+                <li><a href="{{ url_for('auth.user_profile', username=current_user.username) }}">用户中心</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated %}
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                {% if current_user.can(Permission.MODERATE) %}
+                {% if current_user.can(Permission.DEVELOPER) %}
                 <li><a href="{{ url_for('main.moderate') }}">超级终端</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated %}

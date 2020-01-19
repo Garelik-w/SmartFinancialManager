@@ -46,7 +46,7 @@ def get_post(id):
 
 # API-从客户端获取新的文章保存在数据库
 @api.route('/posts/', methods=['POST'])
-@permission_required(Permission.WRITE)
+@permission_required(Permission.BACKEND)
 def new_post():
     post = Post.from_json(request.json)
     post.author = g.current_user
@@ -58,11 +58,11 @@ def new_post():
 
 # API-编辑指定ID的文章
 @api.route('/posts/<int:id>', methods=['PUT'])
-@permission_required(Permission.WRITE)
+@permission_required(Permission.BACKEND)
 def edit_post(id):
     post = Post.query.get_or_404(id)
     if g.current_user != post.author and \
-            not g.current_user.can(Permission.ADMIN):
+            not g.current_user.can(Permission.DEVELOPER):
         return forbidden('Insufficient permissions')
     post.body = request.json.get('body', post.body)
     db.session.add(post)

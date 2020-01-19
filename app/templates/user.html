@@ -10,7 +10,7 @@
     {% else %}
     <img class="img-rounded profile-thumbnail" src="/static/avatar/default.jpg" width="256" height="256">
     {% endif %}
-    <h1>{{ user.username }}</h1>
+    <h1 style="margin-left: 280px;">{{ user.username }}</h1>
     <div class="profile-header">
         {% if user.name or user.location %}
         <p>
@@ -20,7 +20,7 @@
             {% endif %}
         </p>
         {% endif %}
-        {% if current_user.is_administrator() %}
+        {% if current_user.is_supervipadmin() %}
         <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
         {% endif %}
         {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
@@ -28,15 +28,15 @@
         <p>上次登陆时间： {{ moment(user.last_seen).fromNow() }}.</p>
         <p>发布的文章：{{ user.posts.count() }} . 评论：{{ user.comments.count() }} </p>
         <p>
-            {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+            {% if current_user.can(Permission.FRONTEND) and user != current_user %}
                 {% if not current_user.is_following(user) %}
-                <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">关注</a>
+                <a href="{{ url_for('auth.follow', username=user.username) }}" class="btn btn-primary">关注</a>
                 {% else %}
-                <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-default">取消关注</a>
+                <a href="{{ url_for('auth.unfollow', username=user.username) }}" class="btn btn-default">取消关注</a>
                 {% endif %}
             {% endif %}
-            <a href="{{ url_for('.followers', username=user.username) }}">粉丝: <span class="badge">{{ user.followers.count() }}</span></a>
-            <a href="{{ url_for('.followed_by', username=user.username) }}">关注的人: <span class="badge">{{ user.followed.count() }}</span></a>
+            <a href="{{ url_for('auth.followers', username=user.username) }}">粉丝: <span class="badge">{{ user.fans.count() }}</span></a>
+            <a href="{{ url_for('auth.followed_by', username=user.username) }}">关注的人: <span class="badge">{{ user.followed.count() }}</span></a>
             {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}
             | <span class="label label-default">您的粉丝</span>
             {% endif %}
@@ -45,7 +45,7 @@
             {% if user == current_user %}
             <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">编辑概要</a>
             {% endif %}
-            {% if current_user.is_administrator() %}
+            {% if current_user.is_supervipadmin() %}
             <a class="btn btn-danger" href="{{ url_for('.edit_profile_admin', id=user.id) }}">编辑概要 [Admin]</a>
             {% endif %}
         </p>
@@ -55,7 +55,7 @@
 {% include '_posts.html' %}
 {% if pagination %}
 <div class="pagination">
-    {{ macros.pagination_widget(pagination, 'main.user', username=user.username) }}
+    {{ macros.pagination_widget(pagination, 'auth.user_profile', username=user.username) }}
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}智能金融管家 - 粉丝登录{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Fans Login</h1>
+</div>
+<div class="col-md-4">
+    {{ wtf.quick_form(form) }}
+    <br>
+    <p><a href="{{ url_for('auth.login') }}">普通用户登录?</a></p>
+</div>
+{% endblock %}

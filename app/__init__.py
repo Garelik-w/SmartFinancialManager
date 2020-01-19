@@ -58,9 +58,9 @@ def create_app(config_name):
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api/v1.0')
 
-    # # 导入注册VipAdmin蓝本路由
-    # from .vipAdmin import vipAdmin as VipAdmin_blueprint
-    # app.register_blueprint(VipAdmin_blueprint, url_prefix='/Vip')
+    # 导入注册label蓝本路由
+    from .label import label as label_blueprint
+    app.register_blueprint(label_blueprint, url_prefix='/label')
 
     return app
 

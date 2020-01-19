@@ -12,7 +12,7 @@
     {% for follow in follows %}
     <tr>
         <td>
-            <a href="{{ url_for('.user', username = follow.user.username) }}">
+            <a href="{{ url_for('auth.user_profile', username = follow.user.username) }}">
                 <img class="img-rounded" src="{{ follow.user.user_avatar }}" width="32" height="32">
                 {{ follow.user.username }}
             </a>

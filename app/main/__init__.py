@@ -4,8 +4,8 @@ from flask import Blueprint
 # 蓝本类实例，第一个参数是自定义的蓝本名字（用以确定蓝本路由的作用域）
 main = Blueprint('main', __name__)
 
-# 从web包中导入views和errors和两个蓝本路由
-from . import views, errors
+# 导入后台系统模块(main）、文章系统模块（posts)、社交系统模块（social)、错误页面
+from . import views, errors, posts, social
 from ..dbmodels import Permission
 
 
