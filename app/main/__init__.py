@@ -5,7 +5,7 @@ from flask import Blueprint
 main = Blueprint('main', __name__)
 
 # 导入后台系统模块(main）、文章系统模块（posts)、社交系统模块（social)、错误页面
-from . import views, errors, posts, social
+from . import views, errors, posts, social, test
 from ..dbmodels import Permission
 
 

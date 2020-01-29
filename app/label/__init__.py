@@ -11,4 +11,4 @@ from flask import Blueprint
 
 label = Blueprint('label', __name__)
 
-from . import views, dbmodels
+from . import views, labelmodels

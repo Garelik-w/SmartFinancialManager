@@ -5,23 +5,8 @@ from .. import db
 from ..decorators import admin_required, permission_required
 from .forms import PostForm, CommentForm
 from . import main  # 导入蓝本对象
-from flask_sqlalchemy import get_debug_queries
 
-
-# 测试系统-查询超时记录
-# 在main脚本路由请求结束后执行
-@main.after_app_request
-def after_request(response):
-    # get_debug_queries 获取当前路由请求的所有查询元素
-    for query in get_debug_queries():
-        if query.duration >= current_app.config['FLASK_SLOW_DB_QUERY_TIME']:
-            current_app.logger.warning(
-                'Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n'
-                % (query.statement, query.parameters, query.duration,
-                   query.context))
-    return response
-
-
+# ------------------------------------- 起始页前台 ------------------------------------- #
 # Home页
 @main.route('/', methods=['GET', 'POST'])
 def home():
@@ -34,6 +19,11 @@ def home():
         db.session.commit()
         return redirect(url_for('main.home'))
     # GET
+    # 暂时只挑选所有关注者的第一个
+    social_admin = current_user
+    if current_user.can(Permission.BASIC):
+        social_admin_id = current_user.followed.filter_by().first().followed_id
+        social_admin = User.query.filter_by(id=social_admin_id).first_or_404()
     # 判断是否只显示关注的用户的文章
     show_followed = False
     if current_user.is_authenticated:
@@ -48,13 +38,14 @@ def home():
         page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('home.html', form=form, posts=posts,
+    return render_template('home.html', form=form, posts=posts, social_admin=social_admin,
                            show_followed=show_followed, pagination=pagination)
 
 
-# 用户系统-后台中心
-@main.route('/backend/<username>')
-def backend(username):
+# ------------------------------------- 社区前后台 ------------------------------------- #
+# 社区后台
+@main.route('/social_backend/<username>')
+def social_backend(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
     # 获取文章列表，按时间戳排序，并用分页技术处理
@@ -66,16 +57,25 @@ def backend(username):
                            pagination=pagination)
 
 
-# 测试系统-关闭web服务器
-@main.route('/shutdown')
-def server_shutdown():
-    if not current_app.testing:
-        abort(404)
-    shutdown = request.environ.get('werkzeug.server.shutdown')
-    if not shutdown:
-        abort(500)
-    shutdown()
-    return 'Shutting down...'
+# 社区前台
+# 还需要一个装饰器限制必须有关注用户
+# 装饰器实现社区条件准入。装饰器由问题，暂时不搞
+@permission_required(Permission.FRONTEND)
+# @social_required(current_user)
+@main.route('/social/<username>')
+def social_frontend(username):
+    social_admin = User.query.filter_by(username=username).first_or_404()
+    if not current_user.is_following(social_admin):
+        return "您已被踢出社区，请联系社区管理员"
+
+    page = request.args.get('page', 1, type=int)
+    # 获取文章列表，按时间戳排序，并用分页技术处理
+    pagination = social_admin.posts.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('social.html', social_admin=social_admin, posts=posts,
+                           pagination=pagination)
 
 
 # # flask 导入上下文对象和必备函数

@@ -56,7 +56,7 @@ class SeleniumTestCase(unittest.TestCase):
             admin_role = Role.query.filter_by(name='Administrator').first()
             admin = User(email='john@example.com',
                          username='john', password='cat',
-                         role=admin_role, confirmed=True)
+                         role_id=admin_role, confirmed=True)
             db.session.add(admin)
             db.session.commit()
 

@@ -16,6 +16,7 @@ from . import main  # 导入蓝本对象
 # 文章系统-文章页面
 # 每个文本内容都对应一个URL链接
 @main.route('/post/<int:id>', methods=['GET', 'POST'])
+@login_required
 def post(id):
     post = Post.query.get_or_404(id)
     form = CommentForm()
@@ -27,7 +28,7 @@ def post(id):
         db.session.add(comment)
         db.session.commit()
         flash('您的评论已经被发布.')
-        return redirect(url_for('.post', id=post.id, page=-1))
+        return redirect(url_for('main.post', id=post.id, page=-1))
     # GET
     page = request.args.get('page', 1, type=int)
     if page == -1:
@@ -51,6 +52,8 @@ def edit(id):
     form = PostForm()
     if form.validate_on_submit():
         post.body = form.body.data
+        # 生成标签(后期需要判断是否是第一次生成，不是则修改）
+        post.generate_label()
         db.session.add(post)
         db.session.commit()
         flash('文章已经成功修改！')

@@ -1,12 +1,13 @@
 from werkzeug.security import generate_password_hash, check_password_hash  # 导入加密函数和验证函数
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app, request, url_for
+from flask import current_app, url_for
 from datetime import datetime
 from . import db, login_manager
 from markdown import markdown
 import bleach
 from app.exceptions import ValidationError
+from .label.labelmodels import Label
 
 
 # 用户系统-权限管理（位操作）
@@ -143,7 +144,7 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
     # 初始化
-    # 赋予角色（普通用户使用默认角色，管理员则为Administrator）
+    # 赋予角色（这里的role是Role模型的反向代理，在User模型操作Role模型）
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
@@ -151,6 +152,14 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(name='Developer').first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
+
+    # 创建标签
+    def generate_label(self):
+        # 标签初始化
+        label = Label(user_id=self.id)
+        # 给标签创建关系表，关联基础标签
+        label.generate_base_relation()
+        db.session.add(label)
 
     # 用户系统-加密：将password函数转为属性，通过werkzeug实现加密
     @property
@@ -318,18 +327,19 @@ class User(UserMixin, db.Model):
         return self.fans.filter_by(
             fans_id=user.id).first() is not None
 
-    # 用户系统：查询是否关注了大V（是否加入社区）
-    def is_joining(self):
-        if self.followed.filter_by() is not None:
-            return True
-        else:
-            return False
+    # # 用户系统：查询是否关注了大V（是否加入社区）,这个和is_following重复了
+    # def is_joining(self):
+    #
+    #     if self.followed.filter_by() is not None:
+    #         return True
+    #     else:
+    #         return False
 
-    # 社交系统-联结查询-查询所有关注用户的发布文章
+    # 文章系统-联结查询-查询所有关注用户的发布文章
     @property
     def followed_posts(self):
         return Post.query.join(Follow, Follow.followed_id == Post.author_id) \
-            .filter(Follow.follower_id == self.id)
+            .filter(Follow.fans_id == self.id)
 
     # API系统：API认证-生成用户密码令牌
     def generate_auth_token(self, expiration):
@@ -432,6 +442,12 @@ class Post(db.Model):
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
     # 标签系统：文章标签（一对多关系类型）
     labels = db.relationship('Label', backref='post', lazy='dynamic')
+
+    # 创建标签
+    def generate_label(self):
+        label = Label(post_id=self.id)
+        label.generate_base_relation()
+        db.session.add(label)
 
     # 将body字段保存的Markdown纯文本转换成html并存储在body_html
     @staticmethod

@@ -11,6 +11,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from .. import db
 from ..dbmodels import User, Post, Role, Permission
+from ..label.labelmodels import Label
 from ..email import send_email
 from .forms import LoginForm, NormalRegistrationForm, ChangePasswordForm, PasswordResetRequestForm, PasswordResetForm,\
     ChangeEmailForm, EditProfileForm, EditProfileAdminForm, FansRegistrationForm, FansLoginForm, \
@@ -82,10 +83,11 @@ def fans_register(token):
             flash('您的链接已过期，请重新申请加入。')
             return redirect(url_for('main.home'))
         # 生成保存一个临时的Token作为临时登陆权限。
-        user.tmp_token = user.generate_social_temp_confirmation(60)
+        user.tmp_token = user.generate_social_temp_confirmation()
         db.session.add(user)
         # 关注大V表示加入社区
         user.follow(admin)
+        user.generate_label()
         db.session.commit()
         flash('您已成功加入社区.')
         return redirect(url_for('main.home'))
@@ -278,10 +280,11 @@ def change_email(token):
 
 
 # ------------------------------------ 普通用户的前台&后台 ------------------------------------ #
-# 用户系统-用户中心页面
+# 用户系统-用户中心页面(普通用户前台）
 @auth.route('/user_profile/<username>')
 def user_profile(username):
     user = User.query.filter_by(username=username).first_or_404()
+    # label = Label.query.filter_by()
     page = request.args.get('page', 1, type=int)
     # 获取文章列表，按时间戳排序，并用分页技术处理
     pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
@@ -293,7 +296,7 @@ def user_profile(username):
 
 
 # ------------------------------------ 普通用户的后台 ------------------------------------ #
-# 用户系统-普通用户编辑资料
+# 用户系统-普通用户编辑资料(普通用户后台）
 @auth.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():

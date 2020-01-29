@@ -61,7 +61,7 @@ def followers(username):
     pagination = user.fans.paginate(
         page, per_page=current_app.config['FLASK_FOLLOWERS_PER_PAGE'],
         error_out=False)
-    follows = [{'user': item.follower, 'timestamp': item.timestamp}
+    follows = [{'user': item.fans, 'timestamp': item.timestamp}
                for item in pagination.items]
     return render_template('followers.html', user=user, title="Followers of",
                            endpoint='auth.followers', pagination=pagination,

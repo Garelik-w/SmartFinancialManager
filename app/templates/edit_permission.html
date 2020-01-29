@@ -2,20 +2,14 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
 
-{% block title %}智能金融管家 - Post{% endblock %}
+{% block title %}智能金融管家 - 权限管理{% endblock %}
 
 {% block page_content %}
 {% include '_posts.html' %}
-<h4 id="comme nts">评论</h4>
+<h4 id="comme nts">权限管理</h4>
 {% if current_user.can(Permission.FRONTEND) %}
 <div class="comment-form">
     {{ wtf.quick_form(form) }}
-</div>
-{% endif %}
-{% include '_comments.html' %}
-{% if pagination %}
-<div class="pagination">
-    {{ macros.pagination_widget(pagination, 'main.post', fragment='#comments', id=posts[0].id) }}
 </div>
 {% endif %}
 {% endblock %}

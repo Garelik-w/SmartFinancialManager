@@ -18,20 +18,22 @@ if os.environ.get('FLASK_COVERAGE'):
 
 
 # flask扩展 Migrate数据库迁移工具
-from flask_migrate import Migrate, upgrade, MigrateCommand
+from flask_migrate import Migrate, MigrateCommand
 # 从app构造文件导入工厂函数和相关初始化实例
 from app import create_app, db
 from app.dbmodels import User, Role, Follow, Permission, Post, Comment
+from app.label.labelmodels import BasicLabelRole, Label, BasicLabelRelation
 # flask扩展 Script命令行工具
-from flask_script import Manager, Shell
+from flask_script import Manager
 
 app = create_app('production')
 migrate = Migrate(app, db)  # flask-Migrate数据库迁移初始化
 
-# flask-click：支持命令行上下文对象
+# flask-click：支持命令行上下文对象(需要操作新表的内容，就需要在这里加入新的模型）
 @app.shell_context_processor
 def make_shell_context():
-    return dict(db=db, User=User, Role=Role, Follow=Follow, Permission=Permission, Post=Post, Comment=Comment)
+    return dict(db=db, User=User, Role=Role, Follow=Follow, Permission=Permission, Post=Post, Comment=Comment,
+                BasicLabelRole=BasicLabelRole, Label=Label, BasicLabelRelation=BasicLabelRelation)
 
 
 # flask-click：增加test测试命令
