@@ -19,12 +19,9 @@ def label_center(label_id):
     label = Label.query.filter_by(id=label_id).first_or_404()
     if label is None:
         return redirect(url_for('auth.user'))
-
-
-    return render_template('label_center.html',
+    return render_template('label/label_center.html',
                            endpoint='auth.followers', pagination=pagination,
                            follows=follows)
-
 
 
 @label.route('edit_permission/<label_id>')
@@ -37,4 +34,4 @@ def edit_label_permission(label_id):
         db.session.add(label)
         db.session.commit()
     # GET
-    return render_template('edit_permission.html', form=form)
+    return render_template('label/edit_permission.html', form=form)

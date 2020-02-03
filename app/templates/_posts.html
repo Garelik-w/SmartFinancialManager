@@ -23,10 +23,9 @@
                 {% endif %}
             </div>
             <div class="post-footer">
-                <!-- 标签入口 -->
-                <a style="float:left" href="">
-                    <span class="label label-danger">默认</span>
-                </a>
+                <!-- 标签弹窗 -->
+                <div style="float:left" class="label label-danger">测试</div>
+
                 {% if current_user == post.author %}
                 <a href="{{ url_for('main.edit', id=post.id) }}">
                     <span class="label label-primary">编辑</span>
