@@ -5,27 +5,92 @@
 {% block title %}智能金融管家 - 主页{% endblock %}
 
 <!--==========================
-导入外部样式表
+导入主页的外部样式表
 ============================-->
 {% block css %}
 {{ super() }}
+<!-- 导航栏样式表+通用样式 -->
+<link href="{{ url_for('static', filename='css/home_styles.css') }}" rel="stylesheet" type="text/css">
 <!-- home专属外部样式表 -->
 <link href="{{ url_for('static', filename='css/home.css') }}" rel="stylesheet" type="text/css">
 <!-- Font awesome是一款基于css框架的网页字体图标库 -->
 <link href="{{ url_for('static', filename='lib/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
 {% endblock %}
 
-
 <!--==========================
-导入动态页面脚本
+插入主页相关的独立脚本
 ============================-->
-{% block scripts %}
-{{ super() }}
+{% block ex_script %}
 <!-- 页面动态逻辑相关的脚本 -->
 <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
-<!-- contact us段落字符检验和邮件发送脚本 -->
-<script src="{{ url_for('static', filename='contactform/contactform.js') }}"></script>
+<!-- contact us段落字符检验和邮件发送脚本。这个是底部的联系方式，暂时不用 -->
+<!--<script src="{{ url_for('static', filename='contactform/contactform.js') }}"></script>-->
+
+<!-- 多级下拉菜单 -->
+<script src="{{ url_for('static', filename='lib/superfish/hoverIntent.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/superfish/superfish.min.js') }}"></script>
+<!-- 文字动态效果（文字切换入场） -->
+<script src="{{ url_for('static', filename='lib/morphext/morphext.min.js') }}"></script>
+<!-- 页面上下滑动效果 + 网站滚动固定浮动层（用以设定导航栏） -->
+<script src="{{ url_for('static', filename='lib/wow/wow.min.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/stickyjs/sticky.js') }}"></script>
+<!-- 自定义动画（设定不同元素的滑动频率） -->
+<script src="{{ url_for('static', filename='lib/easing/easing.js') }}"></script>
 {% endblock %}
+
+
+<!--==========================
+导航栏
+============================-->
+{% block navbar %}
+<header id="header">
+<div class="container">
+    <!-- 导航栏图片标题 -->
+    <div id="logo" class="pull-left">
+    <a href="#hero"><img src="/static/img/logo.png" alt="" title="" /></img></a>
+    </div>
+    <!-- 导航栏 -->
+    <nav id="nav-menu-container">
+    <ul class="nav-menu">
+        <li class="menu-active"><a href="{{ url_for('main.home') }}#hero">Home</a></li>
+        <li><a href="{{ url_for('main.home') }}#talk">TALK</a></li>
+        <li><a href="{{ url_for('main.home') }}#about">About Me</a></li>
+        <li><a href="{{ url_for('main.home') }}#services">Services</a></li>
+        <li><a href="{{ url_for('main.home') }}#register">Register</a></li>
+        <li><a href="{{ url_for('main.home') }}#contact">Contact Us</a></li>
+        <! -- 这里预留一个超级终端给开发者,普通用户看不到也点不到-->
+         {% if current_user.is_authenticated %}
+            <li><a href=" {{ url_for('main.social_backend', username=current_user.username) }} ">社区后台(测试)</a></li>
+        {% else %}
+            <li><a href="{{ url_for('main.home') }}#hero"></a></li>
+        {% endif %}
+
+        <! -- 判断用户是否登录 -->
+        {% if current_user.is_authenticated %}
+            <li class="menu-has-children user-active">
+                <! -- 这里需要区分是普通用户还是大V用户-->
+                <a href="{{ url_for('main.home') }}#hero">
+                    {% if current_user.user_avatar %}
+                        <img src="{{ current_user.user_avatar }}" width="18" height="18">
+                    {% endif %}
+                    私人智能管家
+                </a>
+                <ul>
+                    <li><a href="{{ url_for('auth.user_profile', username=current_user.username) }}">用户中心</a></li>
+                    <li><a href="{{ url_for('auth.change_password') }}">修改密码</a></li>
+                    <li><a href="{{ url_for('auth.change_email_request') }}">修改邮箱地址</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">登出</a></li>
+                </ul>
+            </li>
+        {% else %}
+            <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+        {% endif %}
+    </ul>
+    </nav>
+</div>
+</header>
+{% endblock %}
+
 
 <!--==========================
 初始页面
@@ -53,7 +118,6 @@
 </div>
 </section>
 {% endblock %}
-
 
 <!--==========================
 页面主要内容
