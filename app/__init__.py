@@ -14,6 +14,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 # flask扩展 PageDown-富文本Markdown技术
 from flask_pagedown import PageDown
+# flask扩展 flask_APScheduler flask定时任务(我用于每日保存数据)
+from flask_apscheduler import APScheduler
 # 导入mysqlDB用以在SQLAlchemy框架下配置MySQL
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -24,6 +26,7 @@ mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
 pagedown = PageDown()
+scheduler = APScheduler()
 
 # 用户认证状态管理
 login_manager = LoginManager()
@@ -45,6 +48,8 @@ def create_app(config_name):
     db.init_app(app)
     login_manager.init_app(app)
     pagedown.init_app(app)
+    scheduler.init_app(app)
+    scheduler.start()
 
     # 导入注册main蓝本路由
     from .main import main as main_blueprint

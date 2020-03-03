@@ -42,7 +42,7 @@ class FansRegistrationForm(FlaskForm):
     my_choices = [('Xq', '雪球'), ('Wb', '新浪微博'), ('Zsxq', '知识星球'),
                   ('Qq', 'QQ等社群'), ('Jrtt', '今日头条'),  ('Wx', '微信公众号'), ('Personal', '个人渠道'),
                   ('Others', '其他财经平台')]
-    channel = SelectField(choices=my_choices, default=['Choice_xq'], label='加入渠道')
+    source = SelectField(choices=my_choices, default=['Choice_xq'], label='加入渠道')
     submit = SubmitField('加入社区')
 
 

@@ -53,7 +53,7 @@ def social_backend(username):
         page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('social_backend.html', user=user, posts=posts,
+    return render_template('social-backend.html', user=user, posts=posts,
                            pagination=pagination)
 
 

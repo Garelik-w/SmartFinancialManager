@@ -44,9 +44,11 @@ class Label(db.Model):
             self.permission = LabelPermission.normal
 
     # 标签创建默认关联一个default基础标签
-    def generate_base_relation(self):
-        role = BasicLabelRole.query.filter_by(id=1).first()
+    def generate_base_relation(self, basic_id=1, is_hide=True):
+        role = BasicLabelRole.query.filter_by(id=basic_id).first()
         f = BasicLabelRelation(label=self, basic=role)
+        # 默认隐藏标签
+        f.hide = is_hide
         db.session.add(f)
 
     # def ref_basic(self, basic):

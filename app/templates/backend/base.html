@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="芝士财经管家">
+        <meta name="author" content="GarryLin-w">
+        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}"><!--引入项目的图标-->
+
+        <title>{% block title %}芝士财经管家-Assets框架{% endblock %}</title><!--设置网页的标题-->
+
+        <!--css模块区域-->
+        {% block css %}　
+        <!-------- Bootstrap & juqery plugins Core Css -------->
+        <link href="{{ url_for('static', filename='assets/plugins/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='assets/plugins/jvectormap/jquery-jvectormap-2.0.3.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='assets/plugins/charts-c3/plugin.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='assets/plugins/morrisjs/morris.min.css') }}" rel="stylesheet">
+<!--        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">-->
+
+        <!-------- 页面主样式 -------->
+        {% block css_page %}
+        <link href="{{ url_for('static', filename='assets/css/nav-style.css') }}" rel="stylesheet"> <!-- 悬浮导航栏 -->
+        <link href="{{ url_for('static', filename='assets/css/style.min.css') }}" rel="stylesheet"> <!-- 后台核心样式 -->
+        {% endblock css_page%}
+        {% endblock css %}
+    </head>
+    <body class="theme-blush">
+        {% include "backend/_header.html" %}<!--引入网页的头部模板-->
+
+        {% include "backend/_sidebar.html" %}<!--引入网页的侧边模板-->
+
+        <!-- Left Sidebar 左侧边栏-->
+        {% block navbar_left %}
+        <aside id="leftsidebar" class="sidebar">
+            <div class="navbar-brand">
+                <button class="btn-menu ls-toggle-btn" type="button"><i class="zmdi zmdi-menu"></i></button>
+                <a href="{{ url_for('main.social_backend', username=current_user.username) }}">
+                    <img src="/static/img/logo.png" width="25" alt="芝士财经管家">
+                    <span class="m-l-10">芝士财经管家</span>
+                    <!-- 隐形弹窗说明解释 -->
+                    <span class="zmdi zmdi-mic hid-microphone" title="我们芝士财经团队囊括各领域的专业助理，能给您提供全方面的支持！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </a>
+            </div>
+            <div class="menu">
+                <ul class="list">
+                    <li>
+                        <div class="user-info">
+                            <a class="image" href="{{ url_for('main.social_backend', username=current_user.username) }}">
+                                <img src="{{ current_user.user_avatar }}" alt="头像">
+                            </a>
+                            <div class="detail">
+                                <h4>
+                                    {% if current_user.nickname %}{{ current_user.nickname }}{% else %}{{ current_user.username }}{% endif %}
+                                </h4>
+                                <small>Super Admin</small>
+                            </div>
+                        </div>
+                    </li>
+                    <li {% block left_survey %} {% endblock left_survey %}><a href="social-backend.html"><i class="zmdi zmdi-home"></i><span>社区概况</span></a></li>
+                    <li {% block left_fans %} {% endblock left_fans %}><a href="javascript:void(0);" class="menu-toggle">
+                            <i class="zmdi zmdi-accounts-alt"></i><span>粉丝后勤助理</span>
+                            <!-- 隐形弹窗说明解释 -->
+                            <span class="zmdi zmdi-mic hid-microphone" title="我能即时为您提供粉丝概况，实现粉丝分组群发功能!">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                        <ul class="ml-menu">
+                            <li><a href="">粉丝概览</a></li>
+                            <li><a href="">粉丝管理</a></li>
+                        </ul>
+                    </li>
+                    <li {% block left_analysis %}{% endblock left_analysis %}><a href=""><i class="zmdi zmdi-laptop-mac"></i><span>数据分析师</span>
+                            <span class="zmdi zmdi-mic hid-microphone" title="我能为您提供全面有效的数据分析，帮助您制定运营策略！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                    </li>
+                    <li {% block left_edit %}{% endblock left_edit %}> <a href="javascript:void(0);" class="menu-toggle"><i class="zmdi zmdi-edit"></i><span>文案编辑助理</span>
+                            <span class="zmdi zmdi-mic hid-microphone" title="我的智能编辑辅助系统能极大提高您的生产力！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                        <ul class="ml-menu">
+                            <li><a href="project-list.html">文章概况</a></li>
+                            <li><a href="project-list.html">短消息概况</a></li>
+                            <li><a href="taskboard.html">智能辅助编辑器</a></li>
+                            <li><a href="taskboard.html">电子邮件</a></li>
+                        </ul>
+                    </li>
+                    <li {% block left_money %}{% endblock left_money %}> <a href="javascript:void(0);" class="menu-toggle"><i class="zmdi zmdi-money-box"></i><span>财务会计</span>
+                            <span class="zmdi zmdi-mic hid-microphone" title="您的收支情况都可以在这里查询！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                        <ul class="ml-menu">
+                            <li><a href="file-dashboard.html">收益概览</a></li>
+                            <li><a href="file-documents.html">付费管理</a></li>
+                            <li><a href="file-images.html">芝士钱包</a></li>
+                        </ul>
+                    </li>
+                    <li {% block left_setting %}{% endblock left_setting %}> <a href="javascript:void(0);" class="menu-toggle"><i class="zmdi zmdi-wrench"></i><span>社区运维助理</span>
+                            <span class="zmdi zmdi-mic hid-microphone" title="我负责辅助您管理和运营社区！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                        <ul class="ml-menu">
+                            <li><a href="blog-dashboard.html">社区样式设计</a></li>
+                            <li><a href="blog-post.html">公告栏</a></li>
+                            <li><a href="blog-list.html">广告模块</a></li>
+                        </ul>
+                    </li>
+                    <li {% block left_secretary %}{% endblock left_secretary %}><a href=""><i class="zmdi zmdi-laptop-mac"></i><span>小秘书</span>
+                            <span class="zmdi zmdi-mic hid-microphone" title="您的日常任务安排和一些必要的应酬都可以联系我解决！">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+        {% endblock navbar_left %}
+
+        <!--自定义模板区域-->
+        {% block content %}
+        {% endblock content %}
+
+        {% include "backend/_footer.html" %}<!--引入网页的底部模板-->
+
+        <!--js模块区域-->
+        {% block js %}
+        <!-------- Jquery Core Js -------->
+        <script type="text/javascript" src="{{ url_for('static', filename='assets/bundles/libscripts.bundle.js') }}"></script> <!-- Chart脚本插件( jquery.v3.2.1, Bootstrap4 js) -->
+        <script type="text/javascript" src="{{ url_for('static', filename='assets/bundles/vendorscripts.bundle.js') }}"></script> <!-- Chart脚本插件（slimscroll, waves Scripts Plugin Js） -->
+        <script type="text/javascript" src="{{ url_for('static', filename='assets/bundles/mainscripts.bundle.js') }}"></script> <!-- 脚本包主要入口 -->
+
+        {% block js_page %}
+        {% endblock js_page %}
+
+        {% endblock js %}
+    </body>
+</html>

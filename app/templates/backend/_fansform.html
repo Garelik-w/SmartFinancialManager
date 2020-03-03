@@ -1,0 +1,12 @@
+<tbody>
+    {% for fans_info in fans_infos %}
+    <tr>
+        <td>{{fans_info.username}}&nbsp;<span class="badge badge-danger">VIP</span></td>
+        <td>{{fans_info.email}}</td>
+        <td>{{fans_info.phone}}</td>
+        <td>{{fans_info.member_since}}</td>
+        <td><a href="">{{fans_info.role_id}}</a></td>
+        <td>{{fans_info.source}}</td>
+    </tr>
+    {% endfor %}
+</tbody>

@@ -65,6 +65,8 @@ class ProductionConfig(Config):
     MAIL_USERNAME = '515337036@qq.com'  # 这里我需要修改
     MAIL_PASSWORD = 'xfiuzbwzliicbjcf'
     FLASK_MAIL_SENDER = 'SmartFinancialManager Admin <515337036@qq.com>'  # 发送者信息
+    # 配置scheduler调度器
+    SCHEDULER_API_ENABLE = True
 
     # 部署-日志记录器
     # @classmethod

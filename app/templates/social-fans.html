@@ -1,0 +1,390 @@
+{% extends "backend/base.html" %}<!--继承社区后台基础模板-->
+
+{% block title %}芝士财经管家-粉丝概览{% endblock %}
+
+<!--------------------自定义页面样式-------------------->
+{% block css_page %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/jquery-datatable/dataTables.bootstrap4.min.css') }}"> <!-- DataTable Css -->
+{% endblock %}
+
+<!-- 左侧导航栏定制样式 -->
+{% block left_fans %}
+    class="active open"
+{% endblock %}
+
+<!--------------------自定义页面模板区域-------------------->
+{% block content %}
+<!-- Main Content -->
+<section class="content">
+    <div class="body_scroll">
+        <!-- 抬头 -->
+        <div class="block-header">
+            <div class="row">
+                <div class="col-lg-7 col-md-6 col-sm-12">
+                    <h2>粉丝概况</h2>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="index.html"><i class="zmdi zmdi-home"></i>芝士财经</a></li>
+                        <li class="breadcrumb-item"><a href="javascript:void(0);">粉丝后勤助理</a></li>
+                        <li class="breadcrumb-item active">粉丝概况</li>
+                    </ul>
+                    <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
+                </div>
+            </div>
+        </div>
+        <!-- 正文内容 -->
+        <div class="container-fluid">
+            <!-- 开头总览 -->
+            <div class="row clearfix">
+                <div class="col-lg-4 col-md-12">
+                    <div class="card tasks_report">
+                        <div class="header">
+                            <h2><strong>Amount</strong> 最新粉丝数</h2>
+                        </div>
+                        <div class="body text-center">
+                            <h4 class="m-t-0">粉丝总数</h4>
+                            <h5 class="m-b-20"><strong>{{ fans_total_new }}</strong></h5>
+                            <input type="text" class="knob dial1" value="{{ fans_net_change }}" data-width="140" data-height="140" data-thickness="0.1" data-fgColor="#00ced1" readonly>
+                            <h6 class="m-t-30">近两日净值变化/幅度变化</h6>
+                            <small class="displayblock">
+                                <strong class="text-danger">{{ fans_total_new - fans_total_last }}</strong> Value
+                                {% if fans_total_new >= fans_total_last %}
+                                    <strong class="text-danger">&nbsp;+{{fans_net_change}}% </strong> Range <i class="zmdi zmdi-trending-up"></i>
+                                {% else %}
+                                    <strong class="text-danger">&nbsp;-{{fans_net_change}}% </strong> Range <i class="zmdi zmdi-trending-down"></i>
+                                {% endif %}
+                            </small>
+                            <div class="sparkline m-t-20" data-type="bar" data-width="97%" data-height="45px" data-bar-Width="2" data-bar-Spacing="8" data-bar-Color="#00ced1">
+                                {{ datas_30[26].fans_total }}, {{ datas_30[25].fans_total }},{{ datas_30[24].fans_total }},
+                                {{ datas_30[23].fans_total }}, {{ datas_30[22].fans_total }},{{ datas_30[21].fans_total }},
+                                {{ datas_30[20].fans_total }}, {{ datas_30[19].fans_total }},{{ datas_30[18].fans_total }},
+                                {{ datas_30[17].fans_total }}, {{ datas_30[16].fans_total }},{{ datas_30[15].fans_total }},
+                                {{ datas_30[14].fans_total }}, {{ datas_30[13].fans_total }},{{ datas_30[12].fans_total }},
+                                {{ datas_30[11].fans_total }}, {{ datas_30[10].fans_total }},{{ datas_30[9].fans_total }},
+                                {{ datas_30[8].fans_total }}, {{ datas_30[7].fans_total }},{{ datas_30[6].fans_total }},
+                                {{ datas_30[5].fans_total }}, {{ datas_30[4].fans_total }},{{ datas_30[3].fans_total }},
+                                {{ datas_30[2].fans_total }}, {{ datas_30[1].fans_total }},{{ datas_30[0].fans_total }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>INCREASE</strong> 新增粉丝数</h2>
+                        </div>
+                        <div class="body">
+                            <h3 class="m-b-0">{{fans_added}}</h3>
+                            <small class="displayblock">
+                                {% if fans_added >= fans_added_last %}
+                                    <strong class="text-danger">+{{ fans_added_change }}%</strong> Range <i class="zmdi zmdi-trending-up"></i>
+                                {% else %}
+                                    <strong class="text-danger">-{{ fans_added_change }}%</strong> Range <i class="zmdi zmdi-trending-down"></i>
+                                {% endif %}
+                            </small>
+                            <div class="sparkline" data-type="line" data-spot-Radius="1" data-highlight-Spot-Color="rgb(63, 81, 181)" data-highlight-Line-Color="#222"
+                            data-min-Spot-Color="rgb(233, 30, 99)" data-max-Spot-Color="rgb(63, 81, 181)" data-spot-Color="rgb(63, 81, 181, 0.7)"
+                            data-offset="90" data-width="100%" data-height="60px" data-line-Width="1" data-line-Color="rgb(63, 81, 181, 0.7)"
+                            data-fill-Color="rgba(221,94,137, 0.2)">
+                                {{ datas_30[13].fans_added }},{{ datas_30[12].fans_added }},{{ datas_30[11].fans_added }},
+                                {{ datas_30[10].fans_added }},{{ datas_30[9].fans_added }},{{ datas_30[8].fans_added }},
+                                {{ datas_30[7].fans_added }},{{ datas_30[6].fans_added }},{{ datas_30[5].fans_added }},
+                                {{ datas_30[4].fans_added }},{{ datas_30[3].fans_added }},{{ datas_30[2].fans_added }},
+                                {{ datas_30[1].fans_added }},{{ datas_30[0].fans_added }}
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>REDUCE</strong> 新减粉丝数</h2>
+                        </div>
+                        <div class="body">
+                            <h3 class="m-b-0">{{fans_reduce}}</h3>
+                            <small class="displayblock">
+                                {% if fans_reduce >= fans_reduce_last %}
+                                    <strong class="text-danger">+{{ fans_reduce_change }}%</strong> Range <i class="zmdi zmdi-trending-up"></i>
+                                {% else %}
+                                    <strong class="text-danger">-{{ fans_reduce_change }}%</strong> Range <i class="zmdi zmdi-trending-down"></i>
+                                {% endif %}
+                            </small>
+                            <div class="sparkline" data-type="line" data-spot-Radius="1" data-highlight-Spot-Color="rgb(63, 81, 181)" data-highlight-Line-Color="#222"
+                            data-min-Spot-Color="rgb(233, 30, 99)" data-max-Spot-Color="rgb(120, 184, 62)" data-spot-Color="rgb(63, 81, 181, 0.7)"
+                            data-offset="90" data-width="100%" data-height="60px" data-line-Width="1" data-line-Color="rgb(63, 81, 181, 0.7)"
+                            data-fill-Color="rgba(128,133,233, 0.2)">
+                                {{ datas_30[13].fans_reduce }},{{ datas_30[12].fans_reduce }},{{ datas_30[11].fans_reduce }},
+                                {{ datas_30[10].fans_reduce }},{{ datas_30[9].fans_reduce }},{{ datas_30[8].fans_reduce }},
+                                {{ datas_30[7].fans_reduce }},{{ datas_30[6].fans_reduce }},{{ datas_30[5].fans_reduce }},
+                                {{ datas_30[4].fans_reduce }},{{ datas_30[3].fans_reduce }},{{ datas_30[2].fans_reduce }},
+                                {{ datas_30[1].fans_reduce }},{{ datas_30[0].fans_reduce }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>More</strong> 更多分析</h2>
+                        </div>
+                        <div class="body">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs p-0 mb-3 nav-tabs-success" role="tablist">
+                                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#home_with_icon_title"> <i class="zmdi zmdi-chart" title="数据分析师"></i> </a></li>
+                                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#profile_with_icon_title"><i class="zmdi zmdi-account" title="粉丝管理"></i></a></li>
+                            </ul>
+                            <!-- Tab panes -->
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane in active" id="home_with_icon_title">
+                                    <img class="img-responsive" src="/static/img/about-img.jpg" alt="About the image">
+                                    <div class="mt-4 pw_header">
+                                        <h6>数据分析师</h6>
+                                        <small class="text-muted">芝士财经  |  数据分析模块</small>
+                                    </div>
+                                    <div class="pw_meta">
+                                        <small class="text-muted"> 您可以了解到</small>
+                                        <small class="text-success">粉丝增长趋势、粉丝活跃、粉丝画像等</small>
+                                    </div>
+                                    <p>更多详细信息，请前往 <code>数据分析师</code>查看</p>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="profile_with_icon_title">
+                                    <div class="mt-4 pw_header">
+                                        <h6>粉丝管理</h6>
+                                        <small class="text-muted">芝士财经  |  粉丝后勤助理模块  |  粉丝管理</small>
+                                    </div>
+                                    <div class="pw_meta">
+                                        <small class="text-muted"> 我将给您提供</small>
+                                        <small class="text-success">分组群发、粉丝导入、粉丝标签管理等</small>
+                                        <small class="text-muted"> 强大的工具，方便您对粉丝进行管理</small>
+                                        <p>更多详细信息，请前往 <code>粉丝管理</code>查看</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 粉丝来源 -->
+            <div class="row clearfix">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>SOURCE</strong> 粉丝来源</h2>
+                        </div>
+                        <div class="body">
+                            <div class="row clearfix">
+                                <!-- 饼状图 -->
+                                <div class="col-lg-6 col-md-12">
+                                    <div style="display:none">
+                                        <input id='pie-chart' value="{{source['wb']}},{{source['jrtt']}},{{source['xq']}},{source['wx']}},{{source['qq']}},{{source['others']}}" />
+                                    </div>
+                                    <br/>
+                                    <div id="chart-donut" style="height: 17rem"></div>
+                                </div>
+                                <!-- 来源列表 -->
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover c_table mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>微博</td>
+                                                    <td>{{source['wb']}}
+                                                        {% if source['wb'] >= source_last[0] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>今日头条</td>
+                                                    <td>{{source['jrtt']}}
+                                                        {% if source['jrtt'] >= source_last[1] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>雪球</td>
+                                                    <td>{{source['xq']}}
+                                                        {% if source['xq'] >= source_last[2] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>微信公众号</td>
+                                                    <td>{{source['wx']}}
+                                                        {% if source['wx'] >= source_last[3] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>QQ等社群</td>
+                                                    <td>{{source['qq']}}
+                                                        {% if source['qq'] >= source_last[4] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>其他渠道</td>
+                                                    <td>{{source['others']}}
+                                                        {% if source['others'] >= source_last[5] %}
+                                                        <i class="zmdi zmdi-caret-up text-danger"></i>
+                                                        {% else %}
+                                                        <i class="zmdi zmdi-caret-down text-success"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 粉丝名单 -->
+            <div class="row clearfix">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>LIST</strong> 粉丝列表 </h2>
+                            <ul class="header-dropdown">
+                                <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>
+                                    <ul class="dropdown-menu dropdown-menu-right slideUp">
+                                        <li><a href="javascript:void(0);">粉丝管理</a></li>
+                                        <li><a href="javascript:void(0);">粉丝大数据分析</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover dataTable js-exportable">
+                                    <!-- 列表标题 -->
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>昵称</th>
+                                            <th>邮箱</th>
+                                            <th>手机</th>
+                                            <th>加入时间</th>
+                                            <th>标签</th>
+                                            <th>常用平台</th>
+                                        </tr>
+                                    </thead>
+                                    <!-- 列表内容 -->
+                                    {% include "backend/_fansform.html" %}<!--引入网页的底部模板-->
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+
+
+<!--------------------自定义脚本-------------------->
+{% block js_page %}
+    {{ super() }}
+    <!-------- Jquery Chart Plugin Js -------->
+    <script src="{{ url_for('static', filename='assets/bundles/sparkline.bundle.js') }}"></script> <!-- jQuery线状图插件Sparkline -->
+    <script src="{{ url_for('static', filename='assets/bundles/countTo.bundle.js') }}"></script>  <!-- countTo数字滚动插件  -->
+    <script src="{{ url_for('static', filename='assets/bundles/knob.bundle.js') }}"></script> <!-- jQuery旋钮插件knob  -->
+    <script src="{{ url_for('static', filename='assets/bundles/jvectormap.bundle.js') }}"></script> <!-- jQuery实现的矢量SVG地图插件 -->
+    <script src="{{ url_for('static', filename='assets/plugins/jvectormap/jquery-jvectormap-us-aea-en.js') }}"></script> <!-- jQuery实现的矢量SVG地图插件 -->
+    <script src="{{ url_for('static', filename='assets/bundles/c3.bundle.js') }}"></script> <!-- C3-Chart脚本插件(基于Sparkline) -->
+
+
+    <!-------- Jquery DataTable Plugin Js Jquery数据表格 -------->
+    <script src="{{ url_for('static', filename='assets/bundles/datatablescripts.bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.colVis.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.flash.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.html5.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.print.min.js') }}"></script>
+
+
+    <!--------  Custom Js -------->
+<!--    <script src="{{ url_for('static', filename='assets/js/pages/widgets/infobox/infobox-1.js') }}"></script>-->
+    <script src="{{ url_for('static', filename='assets/js/pages/charts/jquery-knob.js') }}"></script>  <!-- 页面中图表圆圈，主要定义的是knob数据 -->
+    <script src="{{ url_for('static', filename='assets/js/pages/charts/sparkline.js') }}"></script>  <!-- 线状图（走势图），主要定义的是sparkline数据 -->
+    <script src="{{ url_for('static', filename='assets/js/pages/tables/jquery-datatable.js') }}"></script> <!-- 粉丝列表需要 -->
+
+    <!-- 自定义c3-chart饼图数据 -->
+    <script>
+        $(function() {
+            "use strict";
+            setTimeout(function(){
+                $(document).ready(function(){
+                    var pie_value = $("#pie-chart").val();
+                    var pie_list = pie_value.split(",");
+                    console.log(pie_list[0],pie_list[1],pie_list[2],pie_list[3],pie_list[4],pie_list[5])
+                    var chart = c3.generate({
+                        bindto: '#chart-donut', // id of chart wrapper
+                        data: {
+                            columns: [
+                                // each columns data
+                                ['data1', pie_list[0]],
+                                ['data2', pie_list[1]],
+                                ['data3', pie_list[2]],
+                                ['data4', pie_list[3]],
+                                ['data5', pie_list[4]],
+                                ['data6', pie_list[5]]
+                            ],
+                            type: 'donut', // default type of chart
+                            colors: {
+                                'data1': Aero.colors["blue-dark"],
+                                'data2': Aero.colors["cyan"],
+                                'data3': Aero.colors["blue"],
+                                'data4': Aero.colors["green"],
+                                'data5': Aero.colors["indigo"],
+                                'data6': Aero.colors["pink"],
+                            },
+                            names: {
+                                // name of each serie
+                                'data1': '微博',
+                                'data2': '今日头条',
+                                'data3': '雪球',
+                                'data4': '微信公众号',
+                                'data5': 'QQ等社群',
+                                'data6': '其他渠道',
+                            }
+                        },
+                        axis: {
+                        },
+                        legend: {
+                            show: true, //hide legend
+                        },
+                        padding: {
+                            bottom: 0,
+                            top: 0
+                        },
+                    });
+                });
+            });
+        }, 500);
+    </script>
+
+{% endblock %}

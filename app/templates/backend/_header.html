@@ -1,0 +1,48 @@
+<!-- Page Loader -->
+<div class="page-loader-wrapper">
+    <div class="loader">
+        <div class="m-t-30"><img class="zmdi-hc-spin" src="/static/img/loader.svg" width="48" height="48" alt="CheeseManager"></div>
+        <p>加载中...</p>
+    </div>
+</div>
+
+<!-- Overlay For Sidebars -->
+<div class="overlay"></div>
+
+<!-- Main Search -->
+<div id="search">
+    <button id="close" type="button" class="close btn btn-primary btn-icon btn-icon-mini btn-round">x</button>
+    <form>
+      <input type="search" value="" placeholder="Search..." />
+      <button type="submit" class="btn btn-primary">检索</button>
+    </form>
+</div>
+
+<!-- 头部导航栏-->
+<div class="row">
+    <div class="navbar-top col-lg-5 col-md-6 col-sm-12">
+        <!--    插入头部装饰    -->
+        <div class="wave-wrap">
+            <svg version="1.1" id="wave" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 119 26">
+                <path class="path" d="M120.8,26C98.1,26,86.4,0,60.4,0C35.9,0,21.1,26,0.5,26H120.8z"/>
+            </svg>
+        </div>
+        <ul class="nav-top">
+            <li id="nav-home">
+                <a href="test.html" class="mega-menu" title="Home"><i class="zmdi zmdi-home"></i></a>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0);" class="dropdown-toggle" title="Notifications" data-toggle="dropdown" role="button"><i class="zmdi zmdi-notifications"></i>
+                    <div class="notify"><span class="heartbit"></span><span class="point"></span></div>
+                </a>
+                <ul class="dropdown-menu slideUp2">
+                    <li class="header">Notifications</li>
+                    <li class="footer"> <a href="javascript:void(0);">View All Notifications</a> </li>
+                </ul>
+            </li>
+            <li><a href="test.html" class="mega-menu" title="用户信息"><i class="zmdi zmdi-account"></i></a></li>
+            <li><button id="btn-sider" class="right_icon_toggle_btn" type="button"><i class="zmdi zmdi-arrow-right"></i></button></li>
+        </ul>
+        <div class="clear"></div>
+    </div>
+</div>

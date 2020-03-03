@@ -1,0 +1,136 @@
+/* 头部导航栏 */
+
+/* 导航栏上边波浪装饰 */
+.navbar-top #wave {
+  /* position: absolute; */
+  position: fixed;
+  top: 20px;
+  right:177px;
+  
+  opacity: 0.5 ;
+  z-index: 999;
+  width: 50px;
+  transform-origin: bottom;
+  transform: scaleY(0.8);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.navbar-top #wave .path {
+  fill: #2f3542;
+}
+.navbar-top .clear{
+  clear:both;
+}
+
+/* 导航栏框 */
+.navbar-top .nav-top {
+  position: fixed;
+  top: 31px;
+  right:78px;
+
+  width: 150px;
+  height:40px;
+  margin: 0px 0px;
+  padding: 0px 0px;
+  border:2px solid #2f3542;
+  border-bottom-left-radius: 15px; 
+  border-bottom-right-radius: 10px; 
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  
+  opacity: 0.5 ;
+  z-index: 999;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  background: #2f3542;
+}
+
+/* 导航栏第一个图标 */
+.nav-top li#nav-home{
+  position: relative;
+  bottom: 4px;
+  padding: 0px 4px 0px 7px;
+}
+
+.nav-top li#nav-home>a{
+  padding: 8px 8px;
+  background: #eccc68; 
+  border-radius: 50%; 
+}
+/* 导航栏每个项 */
+.navbar-top .nav-top>li {
+  float:left;
+  list-style: none;
+  padding: 0px 10px;
+}
+
+.navbar-top .nav-top>li>a {
+  width: 50px;
+  line-height: 40px;
+  text-align: center;
+
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  color: #222;
+}
+
+.navbar-top .nav-top>li>a i:hover {
+  color: #fff !important
+}
+
+.navbar-top .nav-top>li>a i {
+  font-size: 20px;
+  vertical-align: middle;
+  /* 图标颜色 */
+  color: #a4b0be; 
+}
+
+/* 导航栏打开侧边栏按键 */
+.navbar-top .nav-top #btn-sider{
+  position: relative;
+  top:10px;
+
+  padding: 0px;
+  margin: 0px;
+  border: none;
+
+  color: #a4b0be; 
+  background-color: #2f3542;
+}
+
+
+/* 整体颜色变换 */
+.theme-dark .navbar-top .nav-top {
+  background: #fff;
+  border-color: #fff;
+	color: #3e3e3e
+}
+
+.theme-dark .right-sidebar .nav-tabs {
+	border-color: #fff
+}
+
+.theme-dark .navbar-top #wave .path{
+  fill:#fff;
+}
+
+.theme-dark .navbar-top .nav-top #btn-sider{
+  background-color:#fff;
+  color:#3e3e3e;
+}
+
+
+/*默认隐藏鼠标扫过显示图标*/
+span.hid-microphone{
+    opacity:0;
+}
+span.hid-microphone:hover{
+    opacity:1;
+}

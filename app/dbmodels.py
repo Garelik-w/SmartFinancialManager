@@ -2,7 +2,7 @@ from werkzeug.security import generate_password_hash, check_password_hash  # 导
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, url_for
-from datetime import datetime
+from datetime import datetime, timedelta
 from . import db, login_manager
 from markdown import markdown
 import bleach
@@ -118,7 +118,7 @@ class User(UserMixin, db.Model):
     confirmed = db.Column(db.Boolean, default=False)
     tmp_token = db.Column(db.Text)
     nickname = db.Column(db.String(64))
-    channel = db.Column(db.String(64))
+    source = db.Column(db.String(64))
     location = db.Column(db.String(64))
     about_me = db.Column(db.Text())
     phone = db.Column(db.String(11), unique=True, index=True)
@@ -127,6 +127,7 @@ class User(UserMixin, db.Model):
     user_avatar = db.Column(db.String(128), default=None)  # 用户头像
     posts = db.relationship('Post', backref='author', lazy='dynamic')  # 关联POST模型的外键
     labels = db.relationship('Label', backref='user', lazy='dynamic')  # 关联LABEL模型的外键
+    analysis = db.relationship('Analysis', backref='user', lazy='dynamic')  # 关联POST模型的外键
 
     # 社交系统-关注的人
     followed = db.relationship('Follow',
@@ -154,11 +155,20 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(default=True).first()
 
     # 创建标签
-    def generate_label(self):
-        # 标签初始化
-        label = Label(user_id=self.id)
-        # 给标签创建关系表，关联基础标签
-        label.generate_base_relation()
+    def insert_label(self, is_vip=False, basic_id=1, is_hide=True):
+        # 如果标签已经存在，那么增加新的关系表
+        label = self.labels.filter(Label.user_id == self.id).first()
+        if label is not None:
+            if is_vip is True:
+                label.permission = True
+            label.generate_base_relation(basic_id, is_hide=is_hide)
+        else:
+            # 如果标签不存在，那么标签初始化
+            label = Label(user_id=self.id)
+            if is_vip is True:
+                label.permission = True
+            # 给标签创建关系表，关联基础标签
+            label.generate_base_relation(basic_id, is_hide=is_hide)
         db.session.add(label)
 
     # 用户系统-加密：将password函数转为属性，通过werkzeug实现加密
@@ -296,7 +306,7 @@ class User(UserMixin, db.Model):
     def is_supervipadmin(self):
         return self.can(Permission.BACKEND)
 
-    # 获取最新时间
+    # 更新用户状态
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
@@ -417,6 +427,9 @@ class AnonymousUser(AnonymousUserMixin):
         return False
 
     def is_developer(self):
+        return False
+
+    def append_analysis_data(self):
         return False
 
 
@@ -540,3 +553,86 @@ class Comment(db.Model):
 # SQLAlchemy的set事件监听：只要实例的Body值设了新值，就会调用函数
 db.event.listen(Post.body, 'set', Post.on_changed_body)
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
+
+# 数据分析存储模型
+class Analysis(db.Model):
+    __tablename__ = 'analysis'
+    id = db.Column(db.Integer, primary_key=True)
+    fans_total = db.Column(db.String(24))
+    posts_total = db.Column(db.String(24))
+    fans_added = db.Column(db.String(24))  # 新增粉丝数(非净值）
+    fans_reduce = db.Column(db.String(24))  # 新增粉丝数(非净值）
+    source_wb = db.Column(db.String(24))  # 粉丝来源-微博
+    source_jrtt = db.Column(db.String(24))  # 粉丝来源-今日头条
+    source_xq = db.Column(db.String(24))  # 粉丝来源-雪球
+    source_wx = db.Column(db.String(24))  # 粉丝来源-微信
+    source_qq = db.Column(db.String(24))  # 粉丝来源-QQ
+    source_others = db.Column(db.String(24))  # 粉丝来源-其他平台
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 多对一关系类型：外键定义，关联users表的id
+
+    # 更新最新一天分析数据数据（每日定时任务调度更新）
+    # 如果超过30天，那么删除多出的数据，保证数据库只存放近30天的数据
+    @staticmethod
+    def append_analysis_data(user_id):
+        user = User.query.filter_by(id=user_id).first()
+        myfans = user.fans  # 获取用户的粉丝过滤器
+        # 插入新数据，而不是更新旧数据
+        data = Analysis(user_id=user_id)
+        data.fans_total = user.fans.count()
+        data.posts_total = user.posts.count()
+        # 找出今日关注大V的粉丝(就是新增粉丝)
+        data.fans_added = myfans.filter(Follow.timestamp > (datetime.utcnow() - timedelta(days=1))).count()
+        # 计算今日新减粉丝(今日总粉丝-昨日总粉丝-今日新增粉丝)
+        data.fans_reduce = data.fans_total - int(user.analysis.order_by(Analysis.timestamp.desc()).all()[1].fans_total) - data.fans_added
+        # 计算保存粉丝来源
+        fans_source = [User.query.filter_by(id=fans.fans_id).first().source for fans in myfans]
+        data.source_wb = fans_source.count('Wb')
+        data.source_jrtt = fans_source.count('Jrtt')
+        data.source_xq = fans_source.count('Xq')
+        data.source_wx = fans_source.count('Wx')
+        data.source_qq = fans_source.count('Qq')
+        data.source_others = fans_source.count('Others') + fans_source.count('Zsxq') + fans_source.count('Personal')
+        data.timestamp = datetime.utcnow()
+        db.session.add(data)
+        return data
+
+    # 生成n天假数据(仅测试用）
+    @staticmethod
+    def generate_fake_datas(count=10):
+        from random import randint
+        from faker import Faker
+        fake = Faker('zh_CN')
+        # 遍历每个用户，只针对大V生成假数据
+        for user in User.query.all():
+            if user.is_supervipadmin():
+                # 清空每个用户超过30天的数据
+                del_date = datetime.utcnow() - timedelta(days=31)
+                del_data = Analysis.query.filter(Analysis.timestamp < del_date).all()
+                [db.session.delete(f) for f in del_data]
+                # 遍历今日起的过去30天，并插入每天的假数据
+                for day in range(count, 0, -1):
+                    get_date = datetime.utcnow() - timedelta(days=day)
+                    fake_data = Analysis(user_id=user.id, timestamp=get_date)
+                    fake_data.fans_total = fake.random_number()
+                    fake_data.posts_total = fake.random_number()
+                    fake_data.fans_added = fake.random_number()
+                    fake_data.fans_reduce = fake.random_number()
+                    db.session.add(fake_data)
+                db.session.commit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

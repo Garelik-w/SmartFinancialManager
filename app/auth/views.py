@@ -28,6 +28,7 @@ def before_request():
     # 最新访问时间更新
     # not current_user.confirmed and
     if current_user.is_authenticated:
+        # 更新用户状态
         current_user.ping()
         # 唯有未认证且超时的情况需要进入认证界面
         if current_user.confirmed is False and current_user.confirm_social_token(current_user.tmp_token) is False:
@@ -70,7 +71,7 @@ def fans_register(token):
     if form.validate_on_submit():
         # POST
         user = User(username=form.username.data,
-                    channel=form.channel.data)
+                    source=form.source.data)
         db.session.add(user)
         db.session.commit()
         # 解析token,成功返回大V的id,获取这个id的user
@@ -87,7 +88,7 @@ def fans_register(token):
         db.session.add(user)
         # 关注大V表示加入社区
         user.follow(admin)
-        user.generate_label()
+        user.insert_label()
         db.session.commit()
         flash('您已成功加入社区.')
         return redirect(url_for('main.home'))
