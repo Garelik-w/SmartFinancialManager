@@ -5,7 +5,10 @@
 <!--------------------自定义页面样式-------------------->
 {% block css_page %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/jquery-datatable/dataTables.bootstrap4.min.css') }}"> <!-- DataTable Css -->
+    <!-- 数据表样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/jquery-datatable/dataTables.bootstrap4.min.css') }}">
+    <!-- 标签弹窗专用 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/label-style.css') }}">
 {% endblock %}
 
 <!-- 左侧导航栏定制样式 -->
@@ -284,13 +287,42 @@
                                             <th>昵称</th>
                                             <th>邮箱</th>
                                             <th>手机</th>
-                                            <th>加入时间</th>
                                             <th>标签</th>
                                             <th>常用平台</th>
+                                            <th>加入时间</th>
                                         </tr>
                                     </thead>
                                     <!-- 列表内容 -->
-                                    {% include "backend/_fansform.html" %}<!--引入网页的底部模板-->
+                                    <tbody>
+                                        {% for num,fans_info in fans_info_dicts.items() %}
+                                        <tr>
+                                            <td>{{fans_info.username}}&nbsp;<span class="badge badge-danger">VIP</span></td>
+                                            <td>{{fans_info.email}}</td>
+                                            <td>{{fans_info.phone}}</td>
+                                            <td>
+                                                <button type="button" onclick="showUserLabels({{basic_label_names[num]}},{{basic_label_remarks[num]}},{{basic_label_colors[num]}})"
+                                                        style="border: none;background: none;" data-toggle="modal" data-target="#LabelManagerModal">
+                                                    <!-- 显示这个用户的标签(无定义则为default) -->
+                                                    <div style="max-width: 100px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">
+                                                        {% if basic_names.__len__() == 1 %}
+                                                            <span class="badge badge-primary">
+                                                                {{ basic_label_names[0] }}
+                                                            </span>
+                                                        {% else %}
+                                                            {% for name in basic_label_names[num] if name != 'default'%}
+                                                                <span class="badge badge-primary">
+                                                                    {{ name }}
+                                                                </span>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </button>
+                                            </td>
+                                            <td>{{fans_info.source}}</td>
+                                            <td>{{fans_info.member_since}}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -300,6 +332,9 @@
         </div>
     </div>
 </section>
+
+<!--------------------插入标签设置的弹窗-------------------->
+{% include "backend/_labelbox.html" %}
 {% endblock %}
 
 
@@ -325,6 +360,12 @@
     <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.html5.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/plugins/jquery-datatable/buttons/buttons.print.min.js') }}"></script>
 
+    <!-------- SweetAlert 纯Js模态消息对话框插件 -------->
+    <script src="{{ url_for('static', filename='assets/plugins/sweetalert/sweetalert.min.js') }}"></script>  <!-- 确认/消息等对话框弹窗 -->
+    <script src="{{ url_for('static', filename='assets/js/labelbox/jquery-ui.js') }}"></script>  <!-- 拖拽功能相关 -->
+    <script src="{{ url_for('static', filename='assets/js/labelbox/jquery.top-droppable.js') }}"></script>  <!-- 拖拽功能相关 -->
+    <script src="{{ url_for('static', filename='assets/js/labelbox/label-manager.js') }}"></script>  <!-- 标签管理工具相关脚本 -->
+
 
     <!--------  Custom Js -------->
 <!--    <script src="{{ url_for('static', filename='assets/js/pages/widgets/infobox/infobox-1.js') }}"></script>-->
@@ -338,9 +379,9 @@
             "use strict";
             setTimeout(function(){
                 $(document).ready(function(){
+                    <!-- 获取html中定义好的饼图数据  -->
                     var pie_value = $("#pie-chart").val();
                     var pie_list = pie_value.split(",");
-                    console.log(pie_list[0],pie_list[1],pie_list[2],pie_list[3],pie_list[4],pie_list[5])
                     var chart = c3.generate({
                         bindto: '#chart-donut', // id of chart wrapper
                         data: {
@@ -386,5 +427,61 @@
             });
         }, 500);
     </script>
+
+    <!-- 标签设置弹窗相关 -->
+    <script>
+        $(function() {
+            // 隐藏模态框触发函数
+            $('#LabelManagerModal').on('hide.bs.modal',
+            function() {
+                // showSuccessMessage();
+                // var test = $("#choice-view").find("div");
+                var sourceId;
+                var sourceField;
+                var sourceIndex;
+                var tmp;
+                $('#choice-view div').each(function(i){
+                    sourceId = $(this).attr("class");
+                    tmp = sourceId.split("-")[0];
+                    sourceField = tmp.substring(0, tmp.length-1);
+                    sourceIndex = tmp.substring(tmp.length-1, tmp.length);
+                    console.log($(this).attr("class"), sourceField, sourceIndex, tmp);
+                    if( sourceField == "myinsert"){
+                        console.log($(this).text())
+
+                    }
+                });
+            });
+
+        });
+
+        <!-- 确认标签 -->
+        function showSuccessMessage() {
+            var sourceId;
+            var sourceField;
+            var sourceIndex;
+            var tmp;
+            $('#choice-view div').each(function(i){
+                sourceId = $(this).attr("class");
+                tmp = sourceId.split("-")[0];
+                sourceField = tmp.substring(0, tmp.length-1);
+                sourceIndex = tmp.substring(tmp.length-1, tmp.length);
+                console.log($(this).attr("class"), sourceField, sourceIndex, tmp);
+                if( sourceField == "myinsert")
+                    console.log($(this).text(),{{ fans_infos[0].id }});
+            });
+
+            swal({
+                    text: "已生效",
+                    icon: "success",
+                    button: {
+                        visible: false,
+                    },
+                    timer: 1500,
+            });
+        }
+    </script>
+
+
 
 {% endblock %}

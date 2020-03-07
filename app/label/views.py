@@ -35,3 +35,11 @@ def edit_label_permission(label_id):
         db.session.commit()
     # GET
     return render_template('label/edit_permission.html', form=form)
+
+# # 从前端获取标签id和对应的基础标签id、自定义标签id
+# @label.route('insert_labels/<label_id, basic_id, custom_id, is_hide>')
+# def insert_labels(label_id, basic_id, custom_id, is_hide=True):
+#     label = Label.query.filter_by(id=label_id).first_or_404()
+#     label.generate_base_relation(basic_id, is_hide) if basic_id is not None else 1
+#     db.session.add(label)
+#     db.session.commit()

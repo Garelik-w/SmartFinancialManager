@@ -154,21 +154,28 @@ class User(UserMixin, db.Model):
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
 
-    # 创建标签
-    def insert_label(self, is_vip=False, basic_id=1, is_hide=True):
+    # 创建基础标签
+    def insert_basic_label(self, basic_id=1, is_hide=True):
         # 如果标签已经存在，那么增加新的关系表
         label = self.labels.filter(Label.user_id == self.id).first()
         if label is not None:
-            if is_vip is True:
-                label.permission = True
-            label.generate_base_relation(basic_id, is_hide=is_hide)
+            label.generate_base_relation(basic_id=basic_id, is_hide=is_hide)
         else:
             # 如果标签不存在，那么标签初始化
             label = Label(user_id=self.id)
-            if is_vip is True:
-                label.permission = True
             # 给标签创建关系表，关联基础标签
-            label.generate_base_relation(basic_id, is_hide=is_hide)
+            label.generate_base_relation(basic_id=basic_id, is_hide=is_hide)
+        db.session.add(label)
+
+    # 用户升级为VIP
+    def set_vip(self, is_vip=False):
+        label = self.labels.filter(Label.user_id == self.id).first()
+        if label is not None:
+            label.permission = is_vip
+        else:
+            # 如果没有生成标签，那就自动创建一个
+            label = Label(user_id=self.id)
+            label.permission = is_vip
         db.session.add(label)
 
     # 用户系统-加密：将password函数转为属性，通过werkzeug实现加密
@@ -336,14 +343,6 @@ class User(UserMixin, db.Model):
             return False
         return self.fans.filter_by(
             fans_id=user.id).first() is not None
-
-    # # 用户系统：查询是否关注了大V（是否加入社区）,这个和is_following重复了
-    # def is_joining(self):
-    #
-    #     if self.followed.filter_by() is not None:
-    #         return True
-    #     else:
-    #         return False
 
     # 文章系统-联结查询-查询所有关注用户的发布文章
     @property
