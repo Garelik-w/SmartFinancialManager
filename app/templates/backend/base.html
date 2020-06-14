@@ -67,7 +67,7 @@
                             <span class="zmdi zmdi-mic hid-microphone" title="我能即时为您提供粉丝概况，实现粉丝分组群发功能!">&nbsp;&nbsp;&nbsp;&nbsp;</span>
                         </a>
                         <ul class="ml-menu">
-                            <li><a href="">粉丝概览</a></li>
+                            <li><a href="{{ url_for('auth.fans_overview', username=current_user.username) }}">粉丝概览</a></li>
                             <li><a href="">粉丝管理</a></li>
                         </ul>
                     </li>
@@ -81,7 +81,7 @@
                         <ul class="ml-menu">
                             <li><a href="project-list.html">文章概况</a></li>
                             <li><a href="project-list.html">短消息概况</a></li>
-                            <li><a href="taskboard.html">智能辅助编辑器</a></li>
+                            <li><a href="taskboard.html">一键编辑</a></li>
                             <li><a href="taskboard.html">电子邮件</a></li>
                         </ul>
                     </li>

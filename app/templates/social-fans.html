@@ -264,7 +264,7 @@
                 </div>
             </div>
             <!-- 粉丝名单 -->
-            <div class="row clearfix">
+            <div id="fans_overview" class="row clearfix">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="header">
@@ -296,29 +296,51 @@
                                     <tbody>
                                         {% for num,fans_info in fans_info_dicts.items() %}
                                         <tr>
-                                            <td>{{fans_info.username}}&nbsp;<span class="badge badge-danger">VIP</span></td>
+                                            <td>{{fans_info.username}}</td>
                                             <td>{{fans_info.email}}</td>
                                             <td>{{fans_info.phone}}</td>
                                             <td>
-                                                <button type="button" onclick="showUserLabels({{basic_label_names[num]}},{{basic_label_remarks[num]}},{{basic_label_colors[num]}})"
+                                                <button type="button" onclick="showUserLabels({{num}},{{basic_label_relations}},{{custom_label_relations}},{{basic_label_roles}},{{custom_label_roles}},'{{fans_info.username}}')"
                                                         style="border: none;background: none;" data-toggle="modal" data-target="#LabelManagerModal">
-                                                    <!-- 显示这个用户的标签(无定义则为default) -->
+                                                    <!-- 显示这个用户的所有标签(无定义权限则为default) -->
                                                     <div style="max-width: 100px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">
-                                                        {% if basic_names.__len__() == 1 %}
-                                                            <span class="badge badge-primary">
-                                                                {{ basic_label_names[0] }}
+                                                        <!-- 显示所有标签，多余的进行缩略 -->
+                                                        {% if basic_label_relations['index'][num].__len__() < 1 and custom_label_relations['index'][num].__len__() < 1%}
+                                                            <span class="badge badge-default">
+                                                                {{ basic_label_roles['name'][0] }}
                                                             </span>
                                                         {% else %}
-                                                            {% for name in basic_label_names[num] if name != 'default'%}
-                                                                <span class="badge badge-primary">
-                                                                    {{ name }}
-                                                                </span>
+                                                            <!-- 显示基础标签 -->
+                                                            {% for index in basic_label_relations['index'][num] %}
+                                                                <!-- limit标签特殊显示 -->
+                                                                {% if basic_label_relations['limit'][num][index] == 1 %}
+                                                                    <span class="badge badge-danger">
+                                                                        {{ basic_label_roles['name'][basic_label_relations['choice'][num][index]] }}
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge badge-default">
+                                                                        {{ basic_label_roles['name'][basic_label_relations['choice'][num][index]] }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            <!-- 显示自定义标签 -->
+                                                            {% for index in custom_label_relations['index'][num] %}
+                                                                <!-- limit标签特殊显示 -->
+                                                                {% if custom_label_relations['limit'][num][index] == 1 %}
+                                                                    <span class="badge badge-danger">
+                                                                        {{ custom_label_roles['name'][custom_label_relations['choice'][num][index]] }}
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge badge-default">
+                                                                        {{ custom_label_roles['name'][custom_label_relations['choice'][num][index]] }}
+                                                                    </span>
+                                                                {% endif %}
                                                             {% endfor %}
                                                         {% endif %}
                                                     </div>
                                                 </button>
                                             </td>
-                                            <td>{{fans_info.source}}</td>
+                                            <td>{{ FansSource[fans_info.source] }}</td>
                                             <td>{{fans_info.member_since}}</td>
                                         </tr>
                                         {% endfor %}
@@ -430,56 +452,90 @@
 
     <!-- 标签设置弹窗相关 -->
     <script>
-        $(function() {
-            // 隐藏模态框触发函数
-            $('#LabelManagerModal').on('hide.bs.modal',
-            function() {
-                // showSuccessMessage();
-                // var test = $("#choice-view").find("div");
-                var sourceId;
-                var sourceField;
-                var sourceIndex;
-                var tmp;
-                $('#choice-view div').each(function(i){
+        $(function()
+        {
+            // ----------------------- 标签弹窗确认按钮触发：保存已选框的标签数据并传到后端 ------------------------- //
+            $("#triggerSuccessMessage").click(function()
+            {
+                console.log('保存已选框内的标签数据');
+                var sourceId, sourceField, sourceIndex, sourceColor, tmp;
+                var basic_view_done = [];
+                var basic_limit_done = [];
+                var custom_view_done = [];
+                var custom_limit_done = [];
+                var insert_view_done = [];
+                var insert_limit_done = [];
+                var name;
+                var label = {{ fans_label_ids }};
+                // 配置标签
+                var url = "http://127.0.0.1:5000/label/save_label_relations/";
+                // 遍历choice-view框内的所有div
+                $('#choice-view div').each(function(i)
+                {
                     sourceId = $(this).attr("class");
                     tmp = sourceId.split("-")[0];
+                    sourceColor = sourceId.split("-")[1];
                     sourceField = tmp.substring(0, tmp.length-1);
                     sourceIndex = tmp.substring(tmp.length-1, tmp.length);
-                    console.log($(this).attr("class"), sourceField, sourceIndex, tmp);
-                    if( sourceField == "myinsert"){
-                        console.log($(this).text())
-
+                    if(sourceField == 'basic')
+                        basic_view_done.push(sourceIndex);
+                    if(sourceField == 'custom')
+                        custom_view_done.push(sourceIndex);
+                    if(sourceField == 'myinsert'){
+                        name = $(this).text();
+                        insert_view_done.push({'index':sourceIndex,'color':sourceColor,'name':name});
                     }
                 });
-            });
+                // 遍历choice-limit框内的所有div
+                $('#choice-limit div').each(function(i)
+                {
+                    sourceId = $(this).attr("class");
+                    tmp = sourceId.split("-")[0];
+                    sourceColor = sourceId.split("-")[1];
+                    sourceField = tmp.substring(0, tmp.length-1);
+                    sourceIndex = tmp.substring(tmp.length-1, tmp.length);
+                    if(sourceField == 'basic')
+                        basic_limit_done.push(sourceIndex);
+                    if(sourceField == 'custom')
+                        custom_limit_done.push(sourceIndex);
+                    if(sourceField == 'myinsert'){
+                        name = $(this).text();
+                        insert_limit_done.push({'index':sourceIndex,'color':sourceColor,'name':name});
+                    }
+                });
+<!--                console.log('view_done:',basic_view_done,custom_view_done,insert_view_done);-->
+<!--                console.log('limit_done:',basic_limit_done,custom_limit_done,insert_limit_done);-->
+<!--                console.log('label_url:',"http://127.0.0.1:5000/label/save_label_relations/"+label[pBtnStatus]);-->
 
-        });
-
-        <!-- 确认标签 -->
-        function showSuccessMessage() {
-            var sourceId;
-            var sourceField;
-            var sourceIndex;
-            var tmp;
-            $('#choice-view div').each(function(i){
-                sourceId = $(this).attr("class");
-                tmp = sourceId.split("-")[0];
-                sourceField = tmp.substring(0, tmp.length-1);
-                sourceIndex = tmp.substring(tmp.length-1, tmp.length);
-                console.log($(this).attr("class"), sourceField, sourceIndex, tmp);
-                if( sourceField == "myinsert")
-                    console.log($(this).text(),{{ fans_infos[0].id }});
-            });
-
-            swal({
-                    text: "已生效",
-                    icon: "success",
-                    button: {
-                        visible: false,
+                // ------------------------------- 基于ajax推送数据给后端并接收返回值 ------------------------------- //
+                var data = {
+                    'view_done': [basic_view_done, custom_view_done, insert_view_done],
+                    'limit_done': [basic_limit_done, custom_limit_done, insert_limit_done],
+                };
+                $.ajax({
+                    type: "POST",
+                    url: url+label[pBtnStatus],
+                    data: JSON.stringify(data),
+                    contentType: 'application/json; charset=UTF-8',
+                    dataType: 'json',
+                    success: function(data)
+                    {
+                        console.log("成功发送数据，id:",data['test']);
+                        if( data.error == true){
+                            swal({
+                                text: "已生效",
+                                icon: "success",
+                                button: {
+                                    visible: false,
+                                },
+                                timer: 1500,
+                            });
+                            window.location.reload() //刷新页面
+                        }
                     },
-                    timer: 1500,
+                });
             });
-        }
+        });
     </script>
 
 

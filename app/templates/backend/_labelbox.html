@@ -6,6 +6,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="title" id="ModalLabel">标签设置</h4>
+                <bord id="label-box-name" style="position:absolute; left:130px;top:40px"></bord>
             </div>
             <div class="modal-body" id="label-modal-body">
                 <div class="row select-wrapper">
@@ -29,7 +30,7 @@
 
                                     </div>
                                     <div class="num-xz score-xz" id="view-delete">
-                                        <span class="numSpan">0</span>/<span class="totalNum">5</span>
+                                        <span id="choice-view-num" class="numSpan">0</span>/<span class="totalNum">6</span>
                                     </div>
                                 </div>
                                 <!-- Hide -->
@@ -37,12 +38,12 @@
                                     <div style=" position: absolute;top:35px;left:2px">
                                         <span class="badge badge-white">Hide</span>
                                     </div>
-                                    <!-- hide标签准备填充的区域 -->
-                                    <div d="choice-hide" class="top-droppable people-group selected-hide-content clearfix" >
+                                    <!-- limit标签准备填充的区域 -->
+                                    <div id="choice-limit" class="top-droppable people-group selected-hide-content clearfix" >
 
                                     </div>
                                     <div class="num-xz score-xz" id="hide-delete">
-                                        <span class="numSpan">0</span>/<span class="totalNum">8</span>
+                                        <span id="choice-limit-num" class="numSpan">0</span>/<span class="totalNum">8</span>
                                     </div>
                                 </div>
                             </div>
@@ -64,22 +65,13 @@
                                     <div id="li-basic-content">
 
                                     </div>
-<!--                                    <li id="basic1-yellow" data-bs="lead"> <span class ="badge badge-yellow">标签0</span></li>-->
-<!--                                    <li id="basic2-blue" data-bs="lead"> <span class ="badge badge-blue">标签1</span></li>-->
-<!--                                    <li id="basic3-pink" data-bs="lead"> <span class ="badge badge-pink">标签2</span></li>-->
-<!--                                    <li id="basic4-green" data-bs="lead"> <span class ="badge badge-green">标签3</span></li>-->
-<!--                                    <li id="basic5-amber" data-bs="lead"> <span class ="badge badge-amber">标签4</span></li>-->
-<!--                                    <li id="basic6-cyan" data-bs="lead"> <span class ="badge badge-cyan">标签5标签5标签5</span></li>-->
-<!--                                    <li id="basic7-purple" data-bs="lead"> <span class ="badge badge-purple">标签6</span></li>-->
-<!--                                    <li id="basic8-cyan" data-bs="lead"> <span class ="badge badge-cyan">标签7</span></li>-->
-<!--                                    <li id="basic9-cyan" data-bs="lead"> <span class ="badge badge-cyan">标签8</span></li>-->
-<!--                                    <li id="basic10-red" data-bs="lead"> <span class ="badge badge-red">标签9</span></li>-->
+                                    <!-- <li id="basic1-yellow" data-bs="lead"> <span class ="badge badge-yellow">标签0</span></li>-->
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 自定义标签待选框 -->
+                    <! 自定义标签待选框 -->
                     <div class="col-lg-12 col-md-12" id="custom-check-box">
                         <div class="card ">
                             <!-- 区块标题 -->
@@ -90,21 +82,14 @@
                             <div class="body people-list" id="custom-content">
                                 <!-- 自定义标签从数据库读取 -->
                                 <ul class="list-wrapper clearfix">
-                                    <!-- <li id="custom1" data-bs="lead"> <span class="name">李狗蛋1</span><span class="infor"></span></li> -->
-                                    <li id="custom1-yellow" data-bs="lead"> <span class ="badge badge-yellow">李狗蛋1</span></li>
-                                    <li id="custom2-cyan" data-bs="lead"> <span class ="badge badge-cyan">李狗蛋2</span></li>
-                                    <li id="custom3-pink" data-bs="lead"> <span class ="badge badge-pink">李狗蛋3李狗蛋3</span></li>
-                                    <li id="custom4-pink" data-bs="lead"> <span class ="badge badge-pink">李狗蛋4</span></li>
-                                    <li id="custom5-pink" data-bs="lead"> <span class ="badge badge-pink">李狗蛋5</span></li>
-                                    <li id="custom6-purple" data-bs="lead"> <span class ="badge badge-purple">李狗蛋6李狗蛋6</span></li>
-                                    <li id="custom7-blue" data-bs="lead"> <span class ="badge badge-blue">李狗蛋7</span></li>
-                                    <li id="custom8-red" data-bs="lead"> <span class ="badge badge-red">李狗蛋8</span></li>
-                                    <li id="custom9-cyan" data-bs="lead"> <span class ="badge badge-cyan">李狗蛋9</span></li>
+                                    <!-- 插入自定义标签列表 -->
+                                    <div id="li-custom-content">
+
+                                    </div>
+                                    <!--<li id="custom1-yellow" data-bs="lead"> <span class ="badge badge-yellow">李狗蛋1</span></li>-->
                                     <!-- 自定义标签现场输入 -->
                                     <div id="owner-wrapper-add"></div>
                                 </ul>
-                                <!-- <ul class="list-wrapper clearfix" id="owner-wrapper-add"></ul> -->
-
                             </div>
 
                             <div class="body" id="insert-custom-content" >
@@ -135,7 +120,8 @@
             </div>
             <div class="modal-footer" style="position: relative;">
                 <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">标签管理</button>
-                <button type="button" onclick="showSuccessMessage()" data-dismiss="modal" class="btn btn-info btn-round waves-effect">确认</button>
+                <button type="button" id="triggerSuccessMessage" data-dismiss="modal" class="btn btn-info btn-round waves-effect">确认</button>
+                <!-- onclick="showSuccessMessage()"-->
             </div>
         </div>
     </div>

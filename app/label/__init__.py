@@ -6,7 +6,6 @@
 # email:515337036@qq.com
 # ======================
 
-
 from flask import Blueprint
 
 label = Blueprint('label', __name__)

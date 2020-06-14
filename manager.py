@@ -22,7 +22,7 @@ from flask_migrate import Migrate, MigrateCommand
 # 从app构造文件导入工厂函数和相关初始化实例
 from app import create_app, db, scheduler
 from app.dbmodels import User, Role, Follow, Permission, Post, Comment, Analysis
-from app.label.labelmodels import BasicLabelRole, Label, BasicLabelRelation
+from app.label.labelmodels import BasicLabelRole, Label, BasicLabelRelation, CustomLabelRole, CustomLabelRelation
 # flask扩展 Script命令行工具
 from flask_script import Manager
 from app.main.data import update_database
@@ -37,7 +37,8 @@ scheduler.add_job(func=update_database, trigger='cron', id='scheduler_data', hou
 @app.shell_context_processor
 def make_shell_context():
     return dict(db=db, User=User, Role=Role, Follow=Follow, Permission=Permission, Post=Post, Comment=Comment,
-                BasicLabelRole=BasicLabelRole, Label=Label, BasicLabelRelation=BasicLabelRelation, Analysis=Analysis)
+                BasicLabelRole=BasicLabelRole, Label=Label, BasicLabelRelation=BasicLabelRelation,
+                CustomLabelRole=CustomLabelRole, CustomLabelRelation=CustomLabelRelation, Analysis=Analysis)
 
 
 # flask-click：增加test测试命令

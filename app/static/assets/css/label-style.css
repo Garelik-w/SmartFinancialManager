@@ -39,8 +39,8 @@
     border-bottom-left-radius: .30rem;
     border-bottom-right-radius: .30rem;
 
-    background: url("../../img/hide.png") no-repeat center center transparent;
-    background-size: 100px 50px;
+    background: url("../../img/limit.png") no-repeat center center transparent;
+    background-size: 220px 80px;
     opacity: 0.8;
     filter:alpha(opacity=80);
     
@@ -131,6 +131,8 @@
     height: 20px; 
     list-style:none;
     z-index: 999;
+    /* 鼠标光标改变 */
+    cursor: pointer;
 }
 
 span.del{

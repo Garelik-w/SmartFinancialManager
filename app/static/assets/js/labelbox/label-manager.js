@@ -1,4 +1,6 @@
+// 定义全局变量
 var pOrder = 0;
+var pBtnStatus = 0;
 
 $(function() {
     /*初始化拖拽功能*/
@@ -83,9 +85,9 @@ $(function() {
                 console.log("change pink color");
                 $(".search-box").css("border", "2px solid #ff4dab");
                 break;
-            case "brown":
-                console.log("change brown lime");
-                $(".search-box").css("border", "2px solid #795548");
+            case "cyan":
+                console.log("change cyan lime");
+                $(".search-box").css("border", "2px solid #5CC5CD");
                 break;
             case "yellow":
                 console.log("change red yellow");
@@ -94,7 +96,7 @@ $(function() {
         }
     });      
 
-    /* 模态框关闭按钮（隐藏）的触发函数 */
+    /* 模态框关闭按钮（隐藏）的触发函数：关闭不做任何反应（不保存） */
     $('#LabelManagerModal').on('hide.bs.modal',
         // 隐藏模态框触发函数
         function() {
@@ -106,6 +108,7 @@ $(function() {
         // $('#myInput').focus()
         change_modal_height();
     });
+
 });
 
 
@@ -144,6 +147,7 @@ function dragged_init(){
                 var sourceElement = $(ui.draggable);
                 console.log(sourceElement.attr("id"));
                 var sourceColor = change_dragged_color(sourceElement.attr("id"));
+//                console.log('看看attr(id)',this,$(ui.draggable[0]).attr('id'));
                 $(this).append('<div class="'+$(ui.draggable[0]).attr('id')+'" style="margin:0px;">'+'<span class="badge" style="background:'+sourceColor+
                     ';color:#fff;">'+$(ui.draggable[0]).text()+'</span>'+'<span class="del"></span></div>');
                 $(ui.draggable[0]).hide();      
@@ -171,6 +175,8 @@ function dragged_init(){
         if(parentNextNode.height()>parentNode.height()){
             parentNode.height(parentNextNode.height());
         }
+        // 修改模态框高度
+        change_modal_height();
     });
 }
 
@@ -212,20 +218,138 @@ function change_dragged_color(sourceId)
 }
 
 <!-- 加载每个用户对应的基础标签和自定义标签 -->
-function showUserLabels(basic_names, basic_remarks, basic_colors){
+function showUserLabels(num, basic_label_relations, custom_label_relations, basic_label_roles, custom_label_roles, username){
     var leadHtml = '';
-    // var colorList = ['red','green','blue','amber','purple','pink','cyan','yellow'];
+    var tmp,sourceId,sourceColor;
+    var choice_view_num = 0;
+    var choice_limit_num = 0;
+    var basic_choice_label = basic_label_relations['choice'][num];
+    var basic_free_label = basic_label_relations['free'][num];
+    var basic_choice_view = basic_label_relations['view'][num];
+    var basic_choice_limit = basic_label_relations['limit'][num];
+
+    var custom_choice_label = custom_label_relations['choice'][num];
+    var custom_free_label = custom_label_relations['free'][num];
+    var custom_choice_view = custom_label_relations['view'][num];
+    var custom_choice_limit = custom_label_relations['limit'][num];
+
+    // 修改标签弹窗所属的用户名
+    $("#label-box-name").text(username);
+
     // 清空原有模态框
     $("#li-basic-content").html("");
-    for (var i = 0; i < basic_names.length; i++) {
-        leadHtml = '<li id="basic'+i+'-'+basic_colors[i]+'" data-bs="lead">'+
-            '<span title="'+basic_remarks[i]+'" class="badge badge-'+basic_colors[i]+'">'+basic_names[i]+'</span></li>';
+    $("#li-custom-content").html("");
+    $("#choice-view").html("");
+    $("#choice-limit").html("");
+    // 保存按键状态以便在其他地方调用
+    pBtnStatus = num;
+    // ------------------------------------ 基础标签相关 ------------------------------------ //
+    // 显示基础待选框-全部数据
+    for (var i = 0; i < basic_label_roles['name'].length; i++) {
+        leadHtml = '<li id="basic'+i+'-'+basic_label_roles['color'][i]+'" data-bs="lead">'+
+            '<span title="'+basic_label_roles['remarks'][i]+'" class="badge badge-'+
+            basic_label_roles['color'][i]+'">'+basic_label_roles['name'][i]+'</span></li>';
         $("#li-basic-content").append(leadHtml);
     }
-    $("choice-view").append('<div class="'+$(ui.draggable[0]).attr('id')+'" style="margin:0px;">'+'<span class="badge" style="background:'+sourceColor+
-                    ';color:#fff;">'+$(ui.draggable[0]).text()+'</span>'+'<span class="del"></span></div>');
+    // 显示基础待选框-隐藏已选数据 && 显示已选框的基础标签
+    for (var i = 0; i < basic_choice_label.length; i++) {
+        sourceId = 'basic'+basic_choice_label[i]+'-'+basic_label_roles['color'][basic_choice_label[i]];
+        sourceColor = change_dragged_color(sourceId);
+        leadHtml = '<div class="'+sourceId+'" style="margin:0px;">'+'<span class="badge" style="background:'+sourceColor+
+            ';color:#fff;">'+$('#'+sourceId).text()+'</span>'+'<span class="del"></span></div>';
+        $('#'+sourceId).hide();
+        // 判断是属于view还是属于limit
+        if(basic_choice_view[i] == 1){
+            $(".top-droppable#choice-view").append(leadHtml);
+            choice_view_num += 1;
+        }
+        if(basic_choice_limit[i] == 1){
+            $(".top-droppable#choice-limit").append(leadHtml);
+            choice_limit_num += 1;
+        }
+    }
+    // ------------------------------------ 自定义标签相关 ------------------------------------ //
+    // 显示自定义待选框-全部数据
+    for (var i = 0; i < custom_label_roles['name'].length; i++) {
+        leadHtml = '<li id="custom'+i+'-'+custom_label_roles['color'][i]+'" data-bs="lead">'+
+            '<span title="'+custom_label_roles['remarks'][i]+'" class="badge badge-'+
+            custom_label_roles['color'][i]+'">'+custom_label_roles['name'][i]+'</span></li>';
+        $("#li-custom-content").append(leadHtml);
+    }
+    // 显示自定义待选框-隐藏已选数据 && 显示已选框的基础标签
+    for (var i = 0; i < custom_choice_label.length; i++) {
+        sourceId = 'custom'+custom_choice_label[i]+'-'+custom_label_roles['color'][custom_choice_label[i]];
+        sourceColor = change_dragged_color(sourceId);
+        leadHtml = '<div class="'+sourceId+'" style="margin:0px;">'+'<span class="badge" style="background:'+sourceColor+
+            ';color:#fff;">'+$('#'+sourceId).text()+'</span>'+'<span class="del"></span></div>';
+        $('#'+sourceId).hide();
+        // 判断是属于view还是属于limit
+        if(custom_choice_view[i] == 1){
+            $(".top-droppable#choice-view").append(leadHtml);
+            choice_view_num += 1;
+        }
+        if(custom_choice_limit[i] == 1){
+            $(".top-droppable#choice-limit").append(leadHtml);
+            choice_limit_num += 1;
+        }
+    }
+
+    // 修改已选框的最小数值
+    $("#choice-view-num").text(choice_view_num);
+    $("#choice-limit-num").text(choice_limit_num); //???/
     // 初始化拖拽功能(点击后初始化，保证整个模态框只有这里最先，增加效率)
     dragged_init();
     // 修改模态框高度
     // change_modal_height(); // 不需要重复修改
 }
+
+// ------------- 标签弹窗确认按钮触发：保存已选框的标签数据并传到后端 ------------- //
+//function showSuccessMessage() {
+//    var sourceId, sourceField, sourceIndex, sourceColor, tmp;
+//    var basic_view_done = [];
+//    var basic_limit_done = [];
+//    var custom_view_done = [];
+//    var custom_limit_done = [];
+//    var insert_view_done = [];
+//    var insert_limit_done = [];
+//    // 遍历choice-view框内的所有div
+//    $('#choice-view div').each(function(i){
+//        sourceId = $(this).attr("class");
+//        tmp = sourceId.split("-")[0];
+//        sourceColor = sourceId.split("-")[1];
+//        sourceField = tmp.substring(0, tmp.length-1);
+//        sourceIndex = tmp.substring(tmp.length-1, tmp.length);
+//        if(sourceField == 'basic')
+//            basic_view_done.push(sourceIndex);
+//        if(sourceField == 'custom' || sourceField == 'myinsert')
+//            custom_view_done.push(sourceIndex);
+//        if(sourceField == 'myinsert')
+//            insert_view_done.push({'index':sourceIndex,'color':sourceColor});
+//    });
+//    // 遍历choice-limit框内的所有div
+//    $('#choice-limit div').each(function(i){
+//        sourceId = $(this).attr("class");
+//        tmp = sourceId.split("-")[0];
+//        sourceColor = sourceId.split("-")[1];
+//        sourceField = tmp.substring(0, tmp.length-1);
+//        sourceIndex = tmp.substring(tmp.length-1, tmp.length);
+////        console.log($(this).attr("class"), sourceField, sourceIndex);
+//        if(sourceField == 'basic')
+//            basic_limit_done.push(sourceIndex);
+//        if(sourceField == 'custom')
+//            custom_limit_done.push(sourceIndex);
+//        if(sourceField == 'myinsert')
+//            insert_limit_done.push({'index':sourceIndex,'color':sourceColor});
+//    });
+//    console.log('view_done:',basic_view_done,custom_view_done,insert_view_done);
+//    console.log('limit_done:',basic_limit_done,custom_limit_done,insert_limit_done);
+//
+//    swal({
+//            text: "已生效",
+//            icon: "success",
+//            button: {
+//                visible: false,
+//            },
+//            timer: 1500,
+//    });
+//}
